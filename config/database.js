@@ -16,7 +16,7 @@ const MYSQL_DB = config.MYSQL_DB;
 var connection = mysql.createConnection({
     host     : MYSQL_HOSTNAME,
     user     : MYSQL_USERNAME,
-    password : '',
+    password : MYSQL_PASSWORD,
     database : MYSQL_DB
 });
 
