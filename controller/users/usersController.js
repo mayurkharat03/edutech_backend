@@ -15,6 +15,8 @@ var db = require('../../config/database');
 
 exports.addUser = async function (req, res, next) {
 
+    console.log('request', req.body);
+
     const { salutation, firstName, middleName, lastName, email, password, phoneNumber, gender, billingAddress, shippingAddress, dateOfBirth, aadhaarCard, panCard, photo, referredBy } = req.body;
 
     const encryptedPassword = await bcrypt.hash(password, saltRounds);
