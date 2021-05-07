@@ -141,8 +141,8 @@ exports.getLogin = function (req, res, next) {
             const accessToken = jwt.sign({ username: username, password: password }, environment.JWT_SECRET);
 
             if (comparison) {
-
-                db.query(`SELECT * from users_session where user_id = '${results[0].id_user}'`, async (errorSession, resultsSession, fields) => {
+                // console.log('comparison', comparison);
+                db.query(`SELECT * from users_session where user_id = ${results[0].id_user}`, async (errorSession, resultsSession, fields) => {
 
                     if (errorSession) {
 
@@ -151,8 +151,8 @@ exports.getLogin = function (req, res, next) {
                     }
 
                     if (resultsSession.length > 0) {
-
-                        db.query(`UPDATE users_session SET session_token = '${accessToken}' where user_id = '${results[0].id_user}'`, async (errorSessionUpdate, resultsSessionUpdate) => {
+                        // console.log('resultsSession', resultsSession);
+                        db.query(`UPDATE users_session SET session_token = '${accessToken}' where user_id = ${results[0].id_user}`, async (errorSessionUpdate, resultsSessionUpdate) => {
 
                             if (errorSessionUpdate) {
 
@@ -166,16 +166,17 @@ exports.getLogin = function (req, res, next) {
 
                     } else {
 
-                        console.log(results[0].id_user);
+                        // console.log('results',results);
 
-                        db.query(`INSERT INTO users_session (user_id, session_token, created_date, updated_date) VALUES ('${results[0].id_user}', '${accessToken}', now(), now())`, (errorSessionInsert, resultsSessionInsert) => {
-                            console.log(results[0].id_user);
+                        db.query(`INSERT INTO users_session (user_id, session_token, generated_session_time, session_timeout, created_date, updated_time) VALUES (${results[0].id_user}, '${accessToken}',now(), now(), now(), now())`, (errorSessionInsert, resultsSessionInsert) => {
+                            // console.log(results[0].id_user, errorSessionInsert);
 
                             if (errorSessionInsert) {
 
                                 return next(errorSessionInsert);
 
                             }
+                            // console.log('resultsSessionInsert', resultsSessionInsert);
 
                             return res.status(200).json({ "message": 'Login successfull', "result": results, "token": accessToken });
 
