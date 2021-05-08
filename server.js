@@ -6,6 +6,9 @@ var path = require('path');
 // const mongoose = require('mongoose');
 const logger = require('./config/logger');
 const usersRoutes = require('./routers/users.route');
+const photoRoutes = require('./routers/photo.route');
+const packageRoutes = require('./routers/package.route');
+
 // const hostDetailsRoutes = require('./routers/hostDetails.route');
 // const propertyListRoutes = require('./routers/propertyList.route');
 // const amenitiesRoutes = require('./routers/amenities.route');
@@ -42,7 +45,12 @@ app.use(bodyParser.urlencoded({ extended: true })); // Middleware
 app.use(express.json());
 app.use(cors());
 
+
 app.use('/user', usersRoutes);
+app.use('/photo', photoRoutes);
+app.use('/package', packageRoutes);
+
+
 // app.use('/host', hostDetailsRoutes);
 // app.use('/property', propertyListRoutes);
 // app.use('/amenities', amenitiesRoutes);
