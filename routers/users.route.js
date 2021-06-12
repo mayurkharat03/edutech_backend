@@ -5,6 +5,7 @@ router.post('/addUser', usersController.addUser);
 router.get('/verifyReferralCode/:code', usersController.verifyReferralCode);
 router.get('/getOTPForRegistration/:phoneNumber', usersController.generateOTPForRegistration);
 router.post('/getLogin', usersController.getLogin);
+router.get('/verifyOTP/:phoneNumber/:otp', usersController.verifyOTP);
 
 
 module.exports = router;

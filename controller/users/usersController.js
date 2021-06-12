@@ -3,6 +3,7 @@ var logger = require('../../config/logger');
 const dotenv = require('dotenv');
 let result = dotenv.config();
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 if (result.error) {
@@ -55,11 +56,21 @@ exports.addUser = async function (req, res, next) {
 
                         }
 
+                        db.query(`INSERT INTO users_tree (user_id, referral_user_id, created_date, updated_date) VALUES (${results.insertId}, ${referredBy}, now(), now())`, (errorUsersTree, resultsUsersTree) => {
+
+                            if (errorUsersTree) {
+    
+                                return next(errorUsersTree);
+    
+                            }
+
+                            return res.status(200).json({ "message": 'User added successfully', "userId": results.insertId });
+    
+                        })
+
                     })
 
                 }
-
-                return res.status(200).json({ "message": 'User added successfully', "userId": results.insertId });
 
             });
 
@@ -97,7 +108,8 @@ exports.verifyReferralCode = function (req, res, next) {
 
 exports.generateOTPForRegistration = function (req, res, next) {
 
-    const phoneNumber = req.params.phoneNumber
+    const phoneNumber = req.params.phoneNumber;
+    const generatedOTP = Math.floor(1000 + Math.random() * 9000);
 
     db.query(`SELECT id_user from users where phone_number = '${phoneNumber}'`, (error, results, fields) => {
 
@@ -113,7 +125,58 @@ exports.generateOTPForRegistration = function (req, res, next) {
 
         } else {
 
-            return res.status(200).json({ "message": 'OTP generated successfully', "result": '12345' });
+            axios.post(`http://smpp.webtechsolution.co/http-jsonapi.php?senderid=LEARNW&route=1&templateid=1207162070319712893&authentic-key=34344c6561726e77656c6c3937301620031366&number=${phoneNumber}&message=Hello,%20Your%20OTP%20for%20Login%20is%20${generatedOTP}%20Thank%20You,Learn%20Well%20Technocraft&username=Learnwell&password=Learnwell`)
+                .then(response => {
+                    console.log(response.data.Code);
+                    if(response.data.Code == '001') {
+                        const messageId = 'response.data.Message-Id';
+                        db.query(`SELECT * from otp_verification where phone_number = '${phoneNumber}'`, (error, resultsOTP, fields) => {
+
+                            if(resultsOTP[0]) {
+
+                                db.query(`UPDATE otp_verification SET message_id = '${messageId}', otp = '${generatedOTP}' where phone_number = ${phoneNumber}`, async (errorOTPUpdate, resultsOTPUpdate) => {
+
+                                    if (errorOTPUpdate) {
+        
+                                        return next(errorOTPUpdate);
+        
+                                    }
+        
+                                    return res.status(200).json({ "message": 'OTP Sent Successfully' });
+        
+                                })
+
+                            } else {
+                                console.log('i am here');
+
+                                db.query(`INSERT INTO otp_verification (phone_number, message_id, otp, generated_time, created_date, updated_time) VALUES ('${phoneNumber}', '${messageId}', '${generatedOTP}', now(), now(), now())`, (errorOTPInsert, resultsOTPInsert) => {
+
+                                    if (errorOTPInsert) {
+            
+                                        return next(errorOTPInsert);
+            
+                                    }
+
+                                    return res.status(200).json({ "message": 'OTP Sent Successfully' });
+            
+                                })
+
+                            }
+
+                        })
+
+                    } else {
+
+                        return res.status(401).json({ "message": 'Can not send OTP' });
+
+                    }
+                    // console.log(response.data.explanation);
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+
+            // return res.status(200).json({ "message": 'OTP generated successfully', "result": '12345' });
 
         }
 
@@ -121,6 +184,40 @@ exports.generateOTPForRegistration = function (req, res, next) {
 
 }
 
+exports.verifyOTP = function (req, res, next) {
+
+    const phoneNumber = req.params.phoneNumber;
+    const otpValue = req.params.otp;
+
+    db.query(`SELECT * from otp_verification where phone_number = '${phoneNumber}'`, (error, results, fields) => {
+
+        if (error) {
+
+            return next(error);
+
+        }
+
+        if (results[0]) {
+
+            if(results[0].otp == otpValue) {
+
+                return res.status(200).json({ "message": 'OTP Verified Successfully' });
+
+            } else {
+
+                return res.status(401).json({ "message": 'Invalid OTP' });
+
+            }
+        
+        } else {
+
+            return res.status(401).json({ "message": 'Invalid phone number' });
+
+        }
+    })
+
+
+ }
 
 exports.getLogin = function (req, res, next) {
 

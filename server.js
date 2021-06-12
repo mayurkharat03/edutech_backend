@@ -8,6 +8,12 @@ const logger = require('./config/logger');
 const usersRoutes = require('./routers/users.route');
 const photoRoutes = require('./routers/photo.route');
 const packageRoutes = require('./routers/package.route');
+const bankRoutes = require('./routers/bank.route');
+const paymentRoutes = require('./routers/payment.route');
+var sha512 = require('js-sha512');
+const environment = process.env;
+
+
 
 // const hostDetailsRoutes = require('./routers/hostDetails.route');
 // const propertyListRoutes = require('./routers/propertyList.route');
@@ -49,7 +55,27 @@ app.use(cors());
 app.use('/user', usersRoutes);
 app.use('/photo', photoRoutes);
 app.use('/package', packageRoutes);
+app.use('/bank', bankRoutes);
+app.use('/payment', paymentRoutes);
 
+
+
+app.post('/paymentResponse', function (req, res) {
+    function checkReverseHash(response) {
+      var hashstring = process.env.EASEBUZZ_SALT + "|" + response.status + "|" + response.udf10 + "|" + response.udf9 + "|" + response.udf8 + "|" + response.udf7 +
+        "|" + response.udf6 + "|" + response.udf5 + "|" + response.udf4 + "|" + response.udf3 + "|" + response.udf2 + "|" + response.udf1 + "|" +
+        response.email + "|" + response.firstname + "|" + response.productinfo + "|" + response.amount + "|" + response.txnid + "|" + response.key
+      hash_key = sha512.sha512(hashstring);
+      if (hash_key == req.body.hash)
+        return true;
+      else
+        return false;
+    }
+    if (checkReverseHash(req.body)) {
+      res.send(req.body);
+    }
+    res.send('false, check the hash value ');
+  });
 
 // app.use('/host', hostDetailsRoutes);
 // app.use('/property', propertyListRoutes);

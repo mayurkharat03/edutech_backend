@@ -24,7 +24,7 @@ exports.addPackage = async function (req, res, next) {
     const { boardId, standardId, userId, totalPrice } = req.body;
 
    
-    db.query(`INSERT INTO package_purchase (board_id, standard_id, user_id, total_price, purchase_date, expiry_date, status, created_date, updated_date) VALUES (${boardId}, ${standardId}, ${userId}, '${totalPrice}', '${purchaseDate}', '${expiryDate}', 1, now(), now())`, (error, results) => {
+    db.query(`INSERT INTO package_purchase (board_id, standard_id, user_id, total_price, purchase_date, expiry_date, status, created_date, updated_date) VALUES (${boardId}, ${standardId}, ${userId}, '${totalPrice}', '${purchaseDate}', '${expiryDate}', 0, now(), now())`, (error, results) => {
 
         if (error) {
 
