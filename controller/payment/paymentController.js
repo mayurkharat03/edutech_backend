@@ -112,7 +112,7 @@ exports.createPaymentOrder = async function (req, res, next) {
     console.log('req.body', req.body, userId, amount, email, phone, firstname, udf1, udf2, udf3, udf4, udf5, productinfo, udf6, udf7, udf8, udf9, udf10, address1, address2, city, state, country, zipcode);
 
     const paymentHashKey = sha512.sha512(process.env.MERCHANT_KEY + "|" + transactionID + "|" + amount + "|" + productinfo + "|" + firstname + "|" + email +
-        "|" + udf1 + "|" + udf2 + "|" + udf3 + "|" + udf4 + "|" + udf5 + "|" + udf6 + "|" + udf7 + "|" + udf8 + "|" + udf9 + "|" + udf10 + "|" + process.env.EASEBUZZ_SALT);
+        "|" + udf1 + "|" + udf2 + "|" + udf3 + "|" + udf4 + "|" + udf5 + "|" + udf6 + "|" + udf7 + "|" + udf8 + "|" + udf9 + "|" + udf10 + "|" + process.env.EASEBUZZ_SALT + "|" + process.env.MERCHANT_KEY);
 
     db.query(`INSERT INTO payment_order_details (user_id, package_id_list, transaction_id, amount, email, first_name, udf1, udf2, udf3, udf4, udf5, udf6, udf7, udf8, udf9, udf10, address1, address2, city, state, country, zipcode, payment_hash_key, status, payment_date, created_date, updated_date) VALUES (${userId}, '${productinfo}', '${transactionID}', '${amount}', '${email}', '${firstname}', '${udf1}', '${udf2}', '${udf3}', '${udf4}', '${udf5}', '${udf6}', '${udf7}', '${udf8}', '${udf9}', '${udf10}', '${address1}', '${address2}', '${city}', '${state}', '${country}', '${zipcode}', '${paymentHashKey}', 0, now(), now(), now())`, (errorPaymentOrder, resultsPaymentOrder) => {
 
