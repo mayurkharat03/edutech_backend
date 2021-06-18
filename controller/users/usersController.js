@@ -21,6 +21,8 @@ exports.addUser = async function (req, res, next) {
     const { salutation, firstName, middleName, lastName, email, password, phoneNumber, gender, billingAddress, shippingAddress, dateOfBirth, aadhaarCard, panCard, photo, referredBy } = req.body;
 
     const encryptedPassword = await bcrypt.hash(password, saltRounds);
+    const accessToken = jwt.sign({ username: email, password: password }, environment.JWT_SECRET);
+
 
     db.query(`SELECT * from users where email = '${email}'`, (errorUser, resultsUser, fields) => {
 
@@ -64,7 +66,18 @@ exports.addUser = async function (req, res, next) {
 
                             }
 
-                            return res.status(200).json({ "message": 'User added successfully', "userId": results.insertId });
+                            db.query(`INSERT INTO users_session (user_id, session_token, generated_session_time, session_timeout, created_date, updated_time) VALUES (${results.insertId}, '${accessToken}',now(), now(), now(), now())`, (errorSessionInsert, resultsSessionInsert) => {
+                                // console.log(results[0].id_user, errorSessionInsert);
+
+                                if (errorSessionInsert) {
+
+                                    return next(errorSessionInsert);
+
+                                }
+
+                                return res.status(200).json({ "message": 'User added successfully', "userId": results.insertId, "token": accessToken });
+                            })
+
 
                         })
 
