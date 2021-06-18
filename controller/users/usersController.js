@@ -59,13 +59,13 @@ exports.addUser = async function (req, res, next) {
                         db.query(`INSERT INTO users_tree (user_id, referral_user_id, created_date, updated_date) VALUES (${results.insertId}, ${referredBy}, now(), now())`, (errorUsersTree, resultsUsersTree) => {
 
                             if (errorUsersTree) {
-    
+
                                 return next(errorUsersTree);
-    
+
                             }
 
                             return res.status(200).json({ "message": 'User added successfully', "userId": results.insertId });
-    
+
                         })
 
                     })
@@ -128,22 +128,22 @@ exports.generateOTPForRegistration = function (req, res, next) {
             axios.post(`http://smpp.webtechsolution.co/http-jsonapi.php?senderid=LEARNW&route=1&templateid=1207162070319712893&authentic-key=34344c6561726e77656c6c3937301620031366&number=${phoneNumber}&message=Hello,%20Your%20OTP%20for%20Login%20is%20${generatedOTP}%20Thank%20You,Learn%20Well%20Technocraft&username=Learnwell&password=Learnwell`)
                 .then(response => {
                     console.log(response.data.Code);
-                    if(response.data.Code == '001') {
+                    if (response.data.Code == '001') {
                         const messageId = 'response.data.Message-Id';
                         db.query(`SELECT * from otp_verification where phone_number = '${phoneNumber}'`, (error, resultsOTP, fields) => {
 
-                            if(resultsOTP[0]) {
+                            if (resultsOTP[0]) {
 
                                 db.query(`UPDATE otp_verification SET message_id = '${messageId}', otp = '${generatedOTP}' where phone_number = ${phoneNumber}`, async (errorOTPUpdate, resultsOTPUpdate) => {
 
                                     if (errorOTPUpdate) {
-        
+
                                         return next(errorOTPUpdate);
-        
+
                                     }
-        
+
                                     return res.status(200).json({ "message": 'OTP Sent Successfully' });
-        
+
                                 })
 
                             } else {
@@ -152,13 +152,13 @@ exports.generateOTPForRegistration = function (req, res, next) {
                                 db.query(`INSERT INTO otp_verification (phone_number, message_id, otp, generated_time, created_date, updated_time) VALUES ('${phoneNumber}', '${messageId}', '${generatedOTP}', now(), now(), now())`, (errorOTPInsert, resultsOTPInsert) => {
 
                                     if (errorOTPInsert) {
-            
+
                                         return next(errorOTPInsert);
-            
+
                                     }
 
                                     return res.status(200).json({ "message": 'OTP Sent Successfully' });
-            
+
                                 })
 
                             }
@@ -199,7 +199,7 @@ exports.verifyOTP = function (req, res, next) {
 
         if (results[0]) {
 
-            if(results[0].otp == otpValue) {
+            if (results[0].otp == otpValue) {
 
                 return res.status(200).json({ "message": 'OTP Verified Successfully' });
 
@@ -208,7 +208,7 @@ exports.verifyOTP = function (req, res, next) {
                 return res.status(401).json({ "message": 'Invalid OTP' });
 
             }
-        
+
         } else {
 
             return res.status(401).json({ "message": 'Invalid phone number' });
@@ -217,7 +217,7 @@ exports.verifyOTP = function (req, res, next) {
     })
 
 
- }
+}
 
 exports.getLogin = function (req, res, next) {
 
@@ -257,7 +257,24 @@ exports.getLogin = function (req, res, next) {
 
                             }
 
-                            return res.status(200).json({ "message": 'Login successfull', "result": results, "token": accessToken });
+                            db.query(`SELECT * from referral_code where user_id = ${results[0].id_user}`, async (errorReferralCode, resultsReferralCode, fields) => {
+
+                                if (errorReferralCode) {
+
+                                    return next(errorReferralCode);
+
+                                }
+
+                                results[0].isAadhaarFrontUploaded = results[0].aadhaar_front == null || 'undefined' ? 0 : 1;
+                                results[0].isAadhaarBackUploaded = results[0].aadhaar_back == null || 'undefined' ? 0 : 1;
+                                results[0].isPanUploaded = results[0].pancard_photo == null || 'undefined' ? 0 : 1;
+                                results[0].isProfileUploaded = results[0].photo == null || 'undefined' ? 0 : 1;
+                                results[0].referralStatus = resultsReferralCode[0].status;
+
+                                return res.status(200).json({ "message": 'Login successfull', "result": results, "token": accessToken });
+
+
+                            })
 
                         })
 
@@ -273,9 +290,25 @@ exports.getLogin = function (req, res, next) {
                                 return next(errorSessionInsert);
 
                             }
-                            // console.log('resultsSessionInsert', resultsSessionInsert);
 
-                            return res.status(200).json({ "message": 'Login successfull', "result": results, "token": accessToken });
+                            db.query(`SELECT * from referral_code where user_id = ${results[0].id_user}`, async (errorReferralCode, resultsReferralCode, fields) => {
+
+                                if (errorReferralCode) {
+
+                                    return next(errorReferralCode);
+
+                                }
+
+                                results[0].isAadhaarFrontUploaded = results[0].aadhaar_front == null ? false : true;
+                                results[0].isAadhaarBackUploaded = results[0].aadhaar_back == null ? false : true;
+                                results[0].isPanUploaded = results[0].pancard_photo == null ? false : true;
+                                results[0].isProfileUploaded = results[0].photo == null || undefined ? false : true;
+                                results[0].referralStatus = resultsReferralCode[0].status;
+
+                                return res.status(200).json({ "message": 'Login successfull', "result": results, "token": accessToken });
+
+
+                            })
 
                         })
 

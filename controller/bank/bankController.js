@@ -31,14 +31,26 @@ exports.addBankDetails = async function (req, res, next) {
 
             db.query(`UPDATE referral_code SET status = 1 where user_id = ${userId}`, async (errorReferralUpdate, resultsReferralUpdate) => {
 
-                console.log('here ia ma ')
                 if (errorReferralUpdate) {
 
                     return next(errorReferralUpdate);
 
                 }
 
-                return res.status(200).json({ "message": 'Bank deatils added successfully', "userId": results });
+                db.query(`SELECT * from referral_code where user_id = ${userId}`, (error, resultsReferral, fields) => {
+
+                    if (error) {
+
+                        return next(error);
+
+                    }
+
+                    resultsReferralUpdate.resultReferral = resultsReferral;
+
+                    return res.status(200).json({ "message": 'Bank deatils added successfully', "userId": resultsReferralUpdate });
+
+                })
+
 
             })
 
