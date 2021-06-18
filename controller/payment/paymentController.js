@@ -14,6 +14,8 @@ if (result.error) {
 const { parsed: env } = result;
 const environment = process.env;
 var db = require('../../config/database');
+const axios = require('axios');
+
 
 
 
@@ -107,17 +109,15 @@ exports.initiatePayment = async function (req, res, next) {
 exports.createPaymentOrder = async function (req, res, next) {
 
     const transactionID = crypto.randomBytes(16).toString("hex");
-    console.log('transactionID', transactionID);
+    // console.log('transactionID', transactionID);
     const { userId, amount, email, phone, firstname, udf1, udf2, udf3, udf4, udf5, productinfo, udf6, udf7, udf8, udf9, udf10, address1, address2, city, state, country, zipcode } = req.body;
-    console.log('req.body', req.body, userId, amount, email, phone, firstname, udf1, udf2, udf3, udf4, udf5, productinfo, udf6, udf7, udf8, udf9, udf10, address1, address2, city, state, country, zipcode);
-
-    const paymentHashKey = sha512.sha512(process.env.MERCHANT_KEY + "|" + transactionID + "|" + amount + "|" + productinfo + "|" + firstname + "|" + email +
-        "|" + udf1 + "|" + udf2 + "|" + udf3 + "|" + udf4 + "|" + udf5 + "|" + udf6 + "|" + udf7 + "|" + udf8 + "|" + udf9 + "|" + udf10 + "|" + process.env.EASEBUZZ_SALT + "|" + process.env.MERCHANT_KEY);
-
+    // console.log('req.body', process.env.MERCHANT_KEY + "|" + transactionID + "|" + amount + "|" + productinfo + "|" + firstname + "|" + email + "|" + udf1 + "|" + udf2 + "|" + udf3 + "|" + udf4 + "|" + udf5 + "|" + udf6 + "|" + udf7 + "|" + udf8 + "|" + udf9 + "|" + udf10 + "|" + process.env.EASEBUZZ_SALT + "|" + process.env.MERCHANT_KEY);
+    const paymentHashKey = sha512.sha512(process.env.MERCHANT_KEY + "|" + transactionID + "|" + amount + "|" + productinfo + "|" + firstname + "|" + email + "|" + udf1 + "|" + udf2 + "|" + udf3 + "|" + udf4 + "|" + udf5 + "|" + udf6 + "|" + udf7 + "|" + udf8 + "|" + udf9 + "|" + udf10 + "|" + process.env.EASEBUZZ_SALT + "|" + process.env.MERCHANT_KEY);
+    // console.log('hashkey', paymentHashKey);
     db.query(`INSERT INTO payment_order_details (user_id, package_id_list, transaction_id, amount, email, first_name, udf1, udf2, udf3, udf4, udf5, udf6, udf7, udf8, udf9, udf10, address1, address2, city, state, country, zipcode, payment_hash_key, status, payment_date, created_date, updated_date) VALUES (${userId}, '${productinfo}', '${transactionID}', '${amount}', '${email}', '${firstname}', '${udf1}', '${udf2}', '${udf3}', '${udf4}', '${udf5}', '${udf6}', '${udf7}', '${udf8}', '${udf9}', '${udf10}', '${address1}', '${address2}', '${city}', '${state}', '${country}', '${zipcode}', '${paymentHashKey}', 0, now(), now(), now())`, (errorPaymentOrder, resultsPaymentOrder) => {
 
         if (errorPaymentOrder) {
-            console.log('errorPaymentOrder', errorPaymentOrder);
+            // console.log('errorPaymentOrder', errorPaymentOrder);
             return next(errorPaymentOrder);
 
         }
@@ -147,45 +147,91 @@ exports.createPaymentOrder = async function (req, res, next) {
 
 }
 
-// exports.confirmPaymentStatus = async function (req, res, next) {
+exports.confirmPaymentStatus = async function (req, res, next) {
+    // console.log('inside cnfirm', req.body);
+    // getSSOToken();
 
-//     const transactionID = crypto.randomBytes(16).toString("hex");
-//     console.log('transactionID', transactionID);
-//     const { userId, transactionID } = req.body;
-//     console.log('req.body', req.body, userId, amount, email, phone, firstname, udf1, udf2, udf3, udf4, udf5, productinfo, udf6, udf7, udf8, udf9, udf10, address1, address2, city, state, country, zipcode);
+    const paymentStatus = req.body.status == 'success' ? 1 : 2;
+    const packageStatus = req.body.status == 'success' ? 1 : 0;
+    const productinfo = req.body.productinfo;
 
-//     const paymentHashKey = sha512.sha512(process.env.MERCHANT_KEY + "|" + transactionID + "|" + amount + "|" + productinfo + "|" + firstname + "|" + email +
-//         "|" + udf1 + "|" + udf2 + "|" + udf3 + "|" + udf4 + "|" + udf5 + "|" + udf6 + "|" + udf7 + "|" + udf8 + "|" + udf9 + "|" + udf10 + "|" + process.env.EASEBUZZ_SALT);
+    console.log('productinfoproductinfo', paymentStatus, packageStatus, productinfo);
+    if (req.body.status == 'success') {
 
-//     db.query(`INSERT INTO payment_order_details (user_id, package_id_list, transaction_id, amount, email, first_name, udf1, udf2, udf3, udf4, udf5, udf6, udf7, udf8, udf9, udf10, address1, address2, city, state, country, zipcode, payment_hash_key, status, payment_date, created_date, updated_date) VALUES (${userId}, '${productinfo}', '${transactionID}', '${amount}', '${email}', '${firstname}', '${udf1}', '${udf2}', '${udf3}', '${udf4}', '${udf5}', '${udf6}', '${udf7}', '${udf8}', '${udf9}', '${udf10}', '${address1}', '${address2}', '${city}', '${state}', '${country}', '${zipcode}', '${paymentHashKey}', 0, now(), now(), now())`, (errorPaymentOrder, resultsPaymentOrder) => {
+        db.query(`UPDATE payment_order_details SET status = ${paymentStatus} where user_id = ${req.body.userId} AND transaction_id = '${req.body.txnid}'`, (errorPaymentOrder, resultsPaymentOrder) => {
 
-//         if (errorPaymentOrder) {
-//             console.log('errorPaymentOrder', errorPaymentOrder);
-//             return next(errorPaymentOrder);
+            if (errorPaymentOrder) {
+                // console.log('errorPaymentOrder', errorPaymentOrder);
+                return next(errorPaymentOrder);
 
-//         }
+            }
 
-//         if (resultsPaymentOrder && resultsPaymentOrder.insertId) {
+            let packageIds = productinfo.trim().split(/\s*,\s*/);
+            // console.log('errorPackageUpdate2');
 
-//             let packageIds = productinfo.trim().split(/\s*,\s*/);
+            for (let i = 0; i < packageIds.length; i++) {
+                // console.log('errorPackageUpdate1');
 
-//             for (let i = 0; i < packageIds.length; i++) {
+                db.query(`UPDATE package_purchase SET status = ${packageStatus} where id_package_purchase = ${packageIds[i]} AND transaction_id = '${req.body.txnid}'`, async (errorPackageUpdate, resultsPackageUpdate) => {
+                    // console.log('errorPackageUpdate');
+                    // console.log('errorPackageUpdate', errorPackageUpdate);
+                    if (errorPackageUpdate) {
 
-//                 db.query(`UPDATE package_purchase SET transaction_id = '${transactionID}' where id_package_purchase = ${packageIds[i]}`, async (errorPackageUpdate, resultsPackageUpdate) => {
+                        return next(errorPackageUpdate);
 
-//                     if (errorPackageUpdate) {
+                    }
 
-//                         return next(errorPackageUpdate);
+                })
+            }
 
-//                     }
+            db.query(`SELECT * from payment_details where transaction_id = '${req.body.txnid}' AND status = 'success'`, (errorUser, resultsUser, fields) => {
 
-//                 })
-//             }
+                if (errorUser) {
 
-//             return res.status(200).json({ "message": 'Payment order created successfully', "result": { userId: userId, productInfo: productinfo, orderId: resultsPaymentOrder.insertId, transactionID: transactionID, paymentHashKey: paymentHashKey, merchantKey: process.env.MERCHANT_KEY, salt: process.env.EASEBUZZ_SALT, transactionStatus: 0, furl: process.env.FURL, surl: process.env.SURL } });
+                    return next(errorUser);
 
-//         }
+                }
 
-//     });
+                if (resultsUser[0]) {
+                    return res.status(200).json({ "message": 'Payment already done', "result": { results: req.body }, "paymentSuccessStatus": true });
 
-// }
+                } else {
+
+
+                    db.query(`INSERT INTO payment_details (user_id, transaction_id, easepayid, email, firstname, phone, amount, hash, status, flag, merchant_logo, cardCategory, error, addedon, mode, issuing_bank, cash_back_percentage, deduction_percentage, error_Message, payment_source, bank_ref_num, merchant_key, bankcode, unmappedstatus, net_amount_debit, card_type, cardnum, productinfo, PG_TYPE, name_on_card, created_at, updated_at) VALUES (${req.body.userId}, '${req.body.txnid}', '${req.body.easepayid}', '${req.body.email}', '${req.body.firstname}', '${req.body.phone}', '${req.body.amount}', '${req.body.hash}', '${req.body.status}', '${req.body.flag}', '${req.body.merchant_logo}', '${req.body.cardCategory}', '${req.body.error}', '${req.body.addedon}', '${req.body.mode}', '${req.body.issuing_bank}', '${req.body.cash_back_percentage}', '${req.body.deduction_percentage}', '${req.body.error_Message}', '${req.body.payment_source}', '${req.body.bank_ref_num}', '${req.body.key}', '${req.body.bankcode}','${req.body.unmappedstatus}','${req.body.net_amount_debit}','${req.body.card_type}','${req.body.cardnum}','${req.body.productinfo}','${req.body.PG_TYPE}','${req.body.name_on_card}', now(), now())`, (errorPaymentDetails, resultsPaymentDetails) => {
+
+                        if (errorPaymentDetails) {
+                            // console.log('errorPaymentDetails', errorPaymentDetails);
+                            return next(errorPaymentDetails);
+
+                        }
+
+                        return res.status(200).json({ "message": 'Payment successfully', "result": { results: req.body }, "paymentSuccessStatus": true });
+
+                    })
+                }
+
+            })
+
+        });
+
+    } else {
+
+        return res.status(200).json({ "message": 'Payment failed', "result": { results: req.body }, "paymentSuccessStatus": false });
+
+    }
+
+}
+
+
+function getSSOToken() {
+
+    axios.post(`http://devapi.alrn.in/Portal/GetSSOToken`, { "clientName": process.env.CLIENT_NAME, "clientId": process.env.CLIENT_ID })
+        .then(response => {
+            console.log('my response data', response);
+        })
+        .catch(error => {
+            console.log(error);
+        });
+
+}
