@@ -79,7 +79,7 @@ exports.getAdminLogin = function (req, res, next) {
 
         if (comparison) {
           return res.status(200).json({
-            message: "Login successfull",
+            message: "Login successfully",
             result: results,
             token: accessToken,
           });
@@ -147,33 +147,42 @@ exports.getAllUsers = function (req, res, next) {
 };
 
 exports.getPackageByUserId = function (req, res, next) {
+
   const userId = req.query.userId;
+
   db.query(
     `SELECT * FROM package_purchase where user_id = '${userId}'`,
     async (error, results, fields) => {
       if (error) return next(error);
 
       if (results[0]) {
+
         return res.status(200).json({
           message: "User package fetched successfully",
           result: results,
         });
+
       }
     }
   );
 };
 
 exports.deleteUser = function (req, res, next) {
+
   const userId = req.query.userId;
+
   db.query(
-    `DELETE * FROM users where id_user = '${userId}'`,
+    `DELETE FROM users where id_user = '${userId}'`,
     async (error, results, fields) => {
+
       if (error) return next(error);
 
-      if (results[0]) {
+      if (results) {
+
         return res.status(200).json({
           message: "User deleted successfully",
         });
+
       }
     }
   );
