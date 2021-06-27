@@ -8,6 +8,7 @@ router.post('/addUser', adminController.addAdminUser);
 router.post('/getAdminLogin', adminController.getAdminLogin);
 
 // User router
+router.get('/userDelete', middleware.checkToken, adminController.deleteUser);
 router.get('/getAllUsers', middleware.checkToken, adminController.getAllUsers);
 router.get('/getPackageByUserId', middleware.checkToken, adminController.getAllUsers);
 
@@ -15,7 +16,7 @@ router.get('/getPackageByUserId', middleware.checkToken, adminController.getAllU
 
 
 // Wallet routes
-
+router.get('/getWalletDetailsByUserId', middleware.checkToken, adminController.getWalletDetailsByUserId);
 
 // Report routes
 
