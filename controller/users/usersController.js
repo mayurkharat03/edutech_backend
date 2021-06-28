@@ -12,9 +12,6 @@ if (result.error) {
 const { parsed: env } = result;
 const environment = process.env;
 var db = require('../../config/database');
-var MailConfig = require('../../config/email');
-const hbs = require('../../node_modules/nodemailer-express-handlebars');
-var gmailTransport = MailConfig.GmailTransport;
 
 
 exports.addUser = async function (req, res, next) {
@@ -452,97 +449,15 @@ exports.getDashboardDetails = function (req, res, next) {
 
 exports.forgotPasswordGenerateOTP = async function (req, res, next) {
 
-    const generatedOTP = Math.floor(1000 + Math.random() * 9000);
+    const mobileNumber = req.params.mobileNumber;
 
-    const emailId = req.body.emailId;
-    // MailConfig.ViewOption(gmailTransport, hbs);
-
-    console.log('my otp', generatedOTP);
-    db.query(`SELECT * from users where email = '${emailId}'`, async (error, results, fields) => {
+    db.query(`SELECT * from users where phone_number = ${mobileNumber}`, async (error, results, fields) => {
 
         if (results.length > 0) {
 
-            results[0].otp = generatedOTP;
+            results[0].otp = "1234"
 
-            db.query(`SELECT * from forget_password where user_id = ${results[0].id_user}`, async (errorSession, resultsSession, fields) => {
-
-                if (errorSession) {
-
-                    return next(errorSession);
-
-                }
-
-                if (resultsSession.length > 0) {
-                    // console.log('update otp', generatedOTP, resultsSession);
-                    db.query(`UPDATE forget_password SET status = 0, otp = '${generatedOTP}' where user_id = ${resultsSession[0].user_id}`, async (errorSessionUpdate, resultsSessionUpdate) => {
-
-                        if (errorSessionUpdate) {
-
-                            return next(errorSessionUpdate);
-
-                        }
-                        // console.log('update otp done', errorSessionUpdate, resultsSessionUpdate);
-                        let HelperOptions = {
-                            from: '"Learnwell" <leestays03@gmail.com>',
-                            to: 'mayurkharat03@gmail.com',
-                            subject: 'Reset Password OTP - Learnwell',
-                            text: `Hi, Your OTP for reset password is: ${generatedOTP}`,
-
-                            context: {
-                                name: "Learnwell",
-                                email: "leestays03@gmail.com",
-                                address: "Pune"
-                            }
-                        };
-
-                        gmailTransport.sendMail(HelperOptions, (error, info) => {
-                            if (error) {
-                                console.log(error);
-                                res.json(error);
-                            }
-
-                            return res.status(200).json({ "message": 'OTP Sent!', "result": results[0] });
-                            // console.log(info);
-                        });
-
-                    })
-
-                } else {
-
-                    db.query(`INSERT INTO forget_password (user_id, otp, otp_generated_time, otp_timeout, status, created_date, updated_date) VALUES (${results[0].id_user}, '${generatedOTP}',now(), now(), 0, now(), now())`, (errorSessionInsert, resultsSessionInsert) => {
-                        // console.log(results[0].id_user, errorSessionInsert);
-
-                        if (errorSessionInsert) {
-
-                            return next(errorSessionInsert);
-
-                        }
-
-                        let HelperOptions = {
-                            from: '"Learnwell" <leestays03@gmail.com>',
-                            to: 'mayurkharat03@gmail.com',
-                            subject: 'Reset Password OTP - Learnwell',
-                            text: `Hi, Your OTP for reset password is: ${generatedOTP}`,
-
-                            context: {
-                                name: "Learnwell",
-                                email: "leestays03@gmail.com",
-                                address: "Pune"
-                            }
-                        };
-
-                        gmailTransport.sendMail(HelperOptions, (error, info) => {
-                            if (error) {
-                                console.log(error);
-                                res.json(error);
-                            }
-
-                            return res.status(200).json({ "message": 'OTP Sent!', "result": results[0] });
-                        });
-
-                    })
-                }
-            })
+            return res.status(200).json({ "message": 'OTP Sent!', "result": results[0] });
 
         } else {
 
@@ -557,37 +472,18 @@ exports.forgotPasswordGenerateOTP = async function (req, res, next) {
 exports.verifyForgotPasswordOTP = async function (req, res, next) {
 
     const userId = req.params.userId;
+    // const phoneNumber = req.params.phoneNumber;
     const otp = req.params.otp;
 
-    db.query(`SELECT * from forget_password where user_id = ${userId} and otp='${otp}'`, async (errorSession, resultsSession, fields) => {
+    if (otp == "1234") {
 
-        if (errorSession) {
+        return res.status(200).json({ "message": 'OTP Verified Successfull!' });
 
-            return next(errorSession);
+    } else {
 
-        }
+        return res.status(400).json({ "message": 'OTP Does Not Match!' });
 
-        if (resultsSession.length > 0) {
-
-            db.query(`UPDATE forget_password SET status=1 where user_id = ${userId}`, async (errorSessionUpdate, resultsSessionUpdate) => {
-
-                if (errorSessionUpdate) {
-
-                    return next(errorSessionUpdate);
-
-                }
-
-
-                return res.status(200).json({ "message": 'OTP Verified Successfull!' });
-
-            })
-
-        } else {
-
-            return res.status(400).json({ "message": 'OTP Does Not Match!' });
-
-        }
-    })
+    }
 
 }
 

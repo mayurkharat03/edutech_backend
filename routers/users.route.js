@@ -8,7 +8,7 @@ router.get('/getOTPForRegistration/:phoneNumber', usersController.generateOTPFor
 router.post('/getLogin', usersController.getLogin);
 router.get('/verifyOTP/:phoneNumber/:otp', usersController.verifyOTP);
 router.get('/getDashBoardDetailsByUserId/:userId', middleware.checkToken, usersController.getDashboardDetails);
-router.get('/getOTPForForgotPassword', usersController.forgotPasswordGenerateOTP);
+router.get('/getOTPForForgotPassword/:mobileNumber', usersController.forgotPasswordGenerateOTP);
 router.get('/verifyForgotPasswordOTP/:userId/:otp', usersController.verifyForgotPasswordOTP);
 router.post('/changePassword', usersController.changePassword);
 
