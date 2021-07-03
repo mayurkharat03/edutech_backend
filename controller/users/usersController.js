@@ -16,7 +16,7 @@ var db = require('../../config/database');
 
 exports.addUser = async function (req, res, next) {
 
-    console.log('request', req.body);
+    // console.log('request', req.body);
 
     const { salutation, firstName, middleName, lastName, email, password, phoneNumber, gender, billingAddress, shippingAddress, dateOfBirth, aadhaarCard, panCard, photo, referredBy } = req.body;
 
@@ -160,7 +160,7 @@ exports.generateOTPForRegistration = function (req, res, next) {
                                 })
 
                             } else {
-                                console.log('i am here');
+                                // console.log('i am here');
 
                                 db.query(`INSERT INTO otp_verification (phone_number, message_id, otp, generated_time, created_date, updated_time) VALUES ('${phoneNumber}', '${messageId}', '${generatedOTP}', now(), now(), now())`, (errorOTPInsert, resultsOTPInsert) => {
 
