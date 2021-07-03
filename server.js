@@ -35,11 +35,11 @@ var db = require('./config/database');
 // mongoose.Promise = global.Promise;
 if (db.state === 'authenticated') {
 
-    console.log({ status: 'connected', message: 'mysql server up' });
+  console.log({ status: 'connected', message: 'mysql server up' });
 
 } else {
 
-    console.error({ status: 'connected', message: 'mysql server up' });
+  console.error({ status: 'connected', message: 'mysql server up' });
 
 }
 
@@ -61,21 +61,21 @@ app.use('/payment', paymentRoutes);
 
 
 app.post('/paymentResponse', function (req, res) {
-    function checkReverseHash(response) {
-      var hashstring = process.env.EASEBUZZ_SALT + "|" + response.status + "|" + response.udf10 + "|" + response.udf9 + "|" + response.udf8 + "|" + response.udf7 +
-        "|" + response.udf6 + "|" + response.udf5 + "|" + response.udf4 + "|" + response.udf3 + "|" + response.udf2 + "|" + response.udf1 + "|" +
-        response.email + "|" + response.firstname + "|" + response.productinfo + "|" + response.amount + "|" + response.txnid + "|" + response.key
-      hash_key = sha512.sha512(hashstring);
-      if (hash_key == req.body.hash)
-        return true;
-      else
-        return false;
-    }
-    if (checkReverseHash(req.body)) {
-      res.send(req.body);
-    }
-    res.send('false, check the hash value ');
-  });
+  function checkReverseHash(response) {
+    var hashstring = process.env.EASEBUZZ_SALT + "|" + response.status + "|" + response.udf10 + "|" + response.udf9 + "|" + response.udf8 + "|" + response.udf7 +
+      "|" + response.udf6 + "|" + response.udf5 + "|" + response.udf4 + "|" + response.udf3 + "|" + response.udf2 + "|" + response.udf1 + "|" +
+      response.email + "|" + response.firstname + "|" + response.productinfo + "|" + response.amount + "|" + response.txnid + "|" + response.key
+    hash_key = sha512.sha512(hashstring);
+    if (hash_key == req.body.hash)
+      return true;
+    else
+      return false;
+  }
+  if (checkReverseHash(req.body)) {
+    res.send(req.body);
+  }
+  res.send('false, check the hash value ');
+});
 
 // app.use('/host', hostDetailsRoutes);
 // app.use('/property', propertyListRoutes);
@@ -84,18 +84,18 @@ app.post('/paymentResponse', function (req, res) {
 // app.use('/user', userDetailsRoutes);
 
 app.get("*", function (req, res) {
-    logger.info("users route");
-    res.sendFile(HTML_FILE);
+  logger.info("users route");
+  res.sendFile(HTML_FILE);
 })
 
 app.use(function (err, req, res, next) {
-    logger.error(err.stack)
-    // res.json({ message: err.message });
+  logger.error(err.stack)
+  // res.json({ message: err.message });
 })
 const port = process.env.PORT || 8091
 app.listen(port, () => {
-    console.log("port  : : ", port)
-    logger.log('Server is up and running on port number ' + port);
+  console.log("port  : : ", port)
+  logger.log('Server is up and running on port number ' + port);
 });
 
 module.exports = { app };

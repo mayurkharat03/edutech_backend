@@ -508,3 +508,24 @@ exports.changePassword = async function (req, res, next) {
 }
 
 
+exports.checkEmailId = async function (req, res, next) {
+
+    const emailId = req.body.emailId;
+
+    db.query(`SELECT * from users where email = '${emailId}'`, async (error, results, fields) => {
+
+        if (results.length > 0) {
+
+            return res.status(409).json({ "message": 'Email ID Already Exist!' });
+
+        } else {
+
+            return res.status(200).json({ "message": 'Email ID Verified!' });
+
+        }
+
+
+    })
+}
+
+

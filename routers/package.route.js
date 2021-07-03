@@ -7,6 +7,8 @@ router.get('/getStandardsByBoardId/:boardId', middleware.checkToken, packageCont
 router.post('/addPackage', middleware.checkToken, packageController.addPackage);
 router.post('/addStudent', middleware.checkToken, packageController.addStudent);
 router.get('/getPackageByUserId/:userId', middleware.checkToken, packageController.getPackageByUserId);
+router.delete('/deletePackageByPackageId/:purchasePackageId', middleware.checkToken, packageController.deletePackage);
+
 // router.get('/getOTPForRegistration/:phoneNumber', packageController.generateOTPForRegistration);
 // router.post('/getLogin', packageController.getLogin);
 

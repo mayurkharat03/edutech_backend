@@ -11,6 +11,7 @@ router.get('/getDashBoardDetailsByUserId/:userId', middleware.checkToken, usersC
 router.get('/getOTPForForgotPassword/:mobileNumber', usersController.forgotPasswordGenerateOTP);
 router.get('/verifyForgotPasswordOTP/:userId/:otp', usersController.verifyForgotPasswordOTP);
 router.post('/changePassword', usersController.changePassword);
+router.post('/checkEmailID', usersController.checkEmailId);
 
 
 
