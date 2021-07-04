@@ -11,6 +11,7 @@ const packageRoutes = require('./routers/package.route');
 const bankRoutes = require('./routers/bank.route');
 const paymentRoutes = require('./routers/payment.route');
 const walletRoutes = require('./routers/wallet.route');
+const adminsRoutes = require('./routers/admin.route');
 var sha512 = require('js-sha512');
 const environment = process.env;
 
@@ -59,6 +60,7 @@ app.use('/package', packageRoutes);
 app.use('/bank', bankRoutes);
 app.use('/payment', paymentRoutes);
 app.use('/wallet', walletRoutes);
+app.use('/admin', adminsRoutes);
 
 
 
