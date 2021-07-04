@@ -193,6 +193,7 @@ exports.confirmPaymentStatus = async function (req, res, next) {
                 }
 
                 if (resultsUser[0]) {
+                    // divideCommissionInTree(req.body.userId, req.body.amount);
                     return res.status(200).json({ "message": 'Payment already done', "result": { results: req.body }, "paymentSuccessStatus": true });
 
                 } else {
@@ -205,7 +206,7 @@ exports.confirmPaymentStatus = async function (req, res, next) {
                             return next(errorPaymentDetails);
 
                         }
-
+                        divideCommissionInTree(req.body.userId, req.body.amount);
                         return res.status(200).json({ "message": 'Payment successfully', "result": { results: req.body }, "paymentSuccessStatus": true });
 
                     })
@@ -235,3 +236,176 @@ function getSSOToken() {
         });
 
 }
+
+function divideCommissionInTree(userId, totalAmount) {
+
+    let totalCommision = (totalAmount / 2).toFixed(2);
+    let firstParent = ((totalCommision * 10) / 100).toFixed(2);
+    let leftCommision = (totalCommision - firstParent).toFixed(2);
+    console.log('totalCommision:::>', totalCommision, 'firstParent:::>', firstParent, 'leftCommision:::>', leftCommision);
+    let arrayValues = [];
+
+    recursiveCall(userId);
+
+    function recursiveCall(user_id) {
+        // console.log('user_id', user_id);
+
+        db.query(`select  referral_user_id
+                    from    (select * from users_tree
+                            order by referral_user_id, id_users_tree) products_sorted,
+                            (select @pv := ${user_id}) initialisation
+                    where   find_in_set(user_id, @pv)
+                    and     length(@pv := concat(@pv, ',', id_users_tree))`, async (error, results, fields) => {
+
+            if (results.length > 0) {
+
+                // console.log('arrayValues', results[0].referral_user_id);
+
+                arrayValues.push(results[0].referral_user_id);
+                recursiveCall(results[0].referral_user_id);
+
+
+            } else {
+
+                console.log('arrayValues end', arrayValues);
+
+                if (arrayValues.length) {
+
+                    let equalCommission = (leftCommision / arrayValues.length).toFixed(2);
+                    console.log('equalCommission', equalCommission);
+
+                    arrayValues.map((item, index) => {
+                        if (index === 0) {
+
+                            db.query(`UPDATE referral_code SET wallet_amount = wallet_amount + '${firstParent}', total_earning = total_earning + '${firstParent}' where user_id = ${item}`, async (errorPasswordUpdate, resultsPasswordUpdate) => {
+
+                                // console.log(resultsPasswordUpdate);
+                                // if (errorPasswordUpdate) {
+
+                                //     return next(errorPasswordUpdate);
+
+                                // }
+
+                            })
+
+                        }
+
+                        db.query(`UPDATE referral_code SET wallet_amount = wallet_amount + '${equalCommission}', total_earning = total_earning + '${equalCommission}' where user_id = ${item}`, async (errorPasswordUpdate, resultsPasswordUpdate) => {
+
+                            // if (errorPasswordUpdate) {
+
+                            //     return next(errorPasswordUpdate);
+
+                            // }
+
+                        })
+
+                    })
+
+                } else {
+
+                    let singleCommission = leftCommision;
+                    console.log('singleCommission', singleCommission);
+
+                }
+
+            }
+        })
+
+    }
+
+}
+
+
+exports.getRecursiveTreeByUserId = async function (req, res, next) {
+
+    const userId = req.params.userId;
+    let arrayValues = [];
+
+    recursiveCall(userId);
+
+    function recursiveCall(user_id) {
+        // console.log('user_id', user_id);
+
+        db.query(`select  referral_user_id
+                    from    (select * from users_tree
+                            order by referral_user_id, id_users_tree) products_sorted,
+                            (select @pv := ${user_id}) initialisation
+                    where   find_in_set(user_id, @pv)
+                    and     length(@pv := concat(@pv, ',', id_users_tree))`, async (error, results, fields) => {
+
+            if (results.length > 0) {
+
+                // console.log('arrayValues', results[0].referral_user_id);
+
+                arrayValues.push(results[0].referral_user_id);
+                recursiveCall(results[0].referral_user_id);
+
+
+            } else {
+
+                console.log('arrayValues end', arrayValues);
+                return res.status(200).json({ "message": 'Parent seller chain user ids!', "result": arrayValues });
+
+            }
+        })
+
+    }
+
+}
+
+exports.getWalletDetailsByUserId = async function (req, res, next) {
+
+    const userId = req.params.userId;
+
+    db.query(`SELECT * from referral_code where user_id = ${userId}`, async (error, results, fields) => {
+
+        if (results.length > 0) {
+
+            db.query(`SELECT COUNT(*) AS immediateReferral FROM users_tree where referral_user_id = ${userId}`, async (error2, results2, fields) => {
+
+                if (results2) {
+
+                    results[0].immediateReferralCount = results2[0].immediateReferral;
+                    return res.status(200).json({ "message": 'Wallet Details!', "result": results[0] });
+
+                } else {
+
+                    results[0].immediateReferralCount = 0;
+                    return res.status(200).json({ "message": 'Wallet Details!', "result": results[0] });
+
+                }
+
+            })
+
+        } else {
+
+            return res.status(200).json({ "message": 'Wallet Details Does Not Exist!' });
+
+        }
+
+    })
+
+}
+
+async function getImmediateReferralByUserId(userId) {
+
+    db.query(`SELECT COUNT(*) AS immediateReferral FROM users_tree where referral_user_id = ${userId}`, async (error, results, fields) => {
+
+        if (results) {
+
+            console.log('results', results);
+            return results[0];
+
+        } else {
+
+            console.log('results empty');
+            return 0;
+
+        }
+
+    })
+
+}
+
+

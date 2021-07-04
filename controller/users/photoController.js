@@ -42,7 +42,7 @@ exports.uploadProfilePhoto = async function (req, res, next) {
         if (error) {
             res.status(500).send(error)
         }
-        
+
 
 
         db.query(`UPDATE users SET photo = '${params.Key}' where id_user = ${userId}`, async (errorSessionUpdate, resultsSessionUpdate) => {
@@ -75,7 +75,7 @@ exports.uploadAadhaarFrontPhoto = async function (req, res, next) {
         if (error) {
             res.status(500).send(error)
         }
-        
+
 
 
         db.query(`UPDATE users SET aadhaar_front = '${params.Key}' where id_user = ${userId}`, async (errorSessionUpdate, resultsSessionUpdate) => {
@@ -89,7 +89,7 @@ exports.uploadAadhaarFrontPhoto = async function (req, res, next) {
             return res.status(200).json({ "message": 'Aadhaar Front uploaded successfully', "result": resultsSessionUpdate });
 
         })
-        
+
     })
 }
 
@@ -107,7 +107,7 @@ exports.uploadAadhaarBackPhoto = async function (req, res, next) {
         if (error) {
             res.status(500).send(error)
         }
-        
+
 
 
         db.query(`UPDATE users SET aadhaar_back = '${params.Key}' where id_user = ${userId}`, async (errorSessionUpdate, resultsSessionUpdate) => {
@@ -121,7 +121,7 @@ exports.uploadAadhaarBackPhoto = async function (req, res, next) {
             return res.status(200).json({ "message": 'Aadhaar Back uploaded successfully', "result": resultsSessionUpdate });
 
         })
-        
+
     })
 }
 
@@ -140,7 +140,7 @@ exports.uploadPancardPhoto = async function (req, res, next) {
         if (error) {
             res.status(500).send(error)
         }
-        
+
 
 
         db.query(`UPDATE users SET pancard_photo = '${params.Key}' where id_user = ${userId}`, async (errorSessionUpdate, resultsSessionUpdate) => {
@@ -154,7 +154,7 @@ exports.uploadPancardPhoto = async function (req, res, next) {
             return res.status(200).json({ "message": 'Pancard uploaded successfully', "result": resultsSessionUpdate });
 
         })
-        
+
     })
 }
 

@@ -16,7 +16,7 @@ var db = require('../../config/database');
 
 exports.addUser = async function (req, res, next) {
 
-    console.log('request', req.body);
+    // console.log('request', req.body);
 
     const { salutation, firstName, middleName, lastName, email, password, phoneNumber, gender, billingAddress, shippingAddress, dateOfBirth, aadhaarCard, panCard, photo, referredBy } = req.body;
 
@@ -160,7 +160,7 @@ exports.generateOTPForRegistration = function (req, res, next) {
                                 })
 
                             } else {
-                                console.log('i am here');
+                                // console.log('i am here');
 
                                 db.query(`INSERT INTO otp_verification (phone_number, message_id, otp, generated_time, created_date, updated_time) VALUES ('${phoneNumber}', '${messageId}', '${generatedOTP}', now(), now(), now())`, (errorOTPInsert, resultsOTPInsert) => {
 
@@ -445,3 +445,87 @@ exports.getDashboardDetails = function (req, res, next) {
     })
 
 }
+
+
+exports.forgotPasswordGenerateOTP = async function (req, res, next) {
+
+    const mobileNumber = req.params.mobileNumber;
+
+    db.query(`SELECT * from users where phone_number = ${mobileNumber}`, async (error, results, fields) => {
+
+        if (results.length > 0) {
+
+            results[0].otp = "1234"
+
+            return res.status(200).json({ "message": 'OTP Sent!', "result": results[0] });
+
+        } else {
+
+            return res.status(200).json({ "message": 'User Does Not Exist!' });
+
+        }
+
+    })
+
+}
+
+exports.verifyForgotPasswordOTP = async function (req, res, next) {
+
+    const userId = req.params.userId;
+    // const phoneNumber = req.params.phoneNumber;
+    const otp = req.params.otp;
+
+    if (otp == "1234") {
+
+        return res.status(200).json({ "message": 'OTP Verified Successfull!' });
+
+    } else {
+
+        return res.status(400).json({ "message": 'OTP Does Not Match!' });
+
+    }
+
+}
+
+exports.changePassword = async function (req, res, next) {
+
+    const userId = req.body.userId;
+    const newPassword = req.body.newPassword;
+
+    const encryptedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    db.query(`UPDATE users SET password = '${encryptedPassword}' where id_user = ${userId}`, async (errorPasswordUpdate, resultsPasswordUpdate) => {
+
+        if (errorPasswordUpdate) {
+
+            return next(errorPasswordUpdate);
+
+        }
+
+        return res.status(200).json({ "message": 'Password updated successfully!' });
+
+    })
+}
+
+
+exports.checkEmailId = async function (req, res, next) {
+
+    const emailId = req.body.emailId;
+
+    db.query(`SELECT * from users where email = '${emailId}'`, async (error, results, fields) => {
+
+        if (results.length > 0) {
+
+            return res.status(409).json({ "message": 'Email ID Already Exist!' });
+
+        } else {
+
+            return res.status(200).json({ "message": 'Email ID Verified!' });
+
+        }
+
+
+    })
+}
+
+
