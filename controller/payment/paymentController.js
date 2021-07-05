@@ -361,20 +361,25 @@ exports.getWalletDetailsByUserId = async function (req, res, next) {
     db.query(`SELECT * from referral_code where user_id = ${userId}`, async (error, results, fields) => {
 
         if (results.length > 0) {
+            db.query(`SELECT * from users_bank_details where user_id = ${userId}`, async (errorBank, resultsBank, fields) => {
 
-            db.query(`SELECT COUNT(*) AS immediateReferral FROM users_tree where referral_user_id = ${userId}`, async (error2, results2, fields) => {
+                results[0].bankDetails = resultsBank[0];
 
-                if (results2) {
+                db.query(`SELECT COUNT(*) AS immediateReferral FROM users_tree where referral_user_id = ${userId}`, async (error2, results2, fields) => {
 
-                    results[0].immediateReferralCount = results2[0].immediateReferral;
-                    return res.status(200).json({ "message": 'Wallet Details!', "result": results[0] });
+                    if (results2) {
 
-                } else {
+                        results[0].immediateReferralCount = results2[0].immediateReferral;
+                        return res.status(200).json({ "message": 'Wallet Details!', "result": results[0] });
 
-                    results[0].immediateReferralCount = 0;
-                    return res.status(200).json({ "message": 'Wallet Details!', "result": results[0] });
+                    } else {
 
-                }
+                        results[0].immediateReferralCount = 0;
+                        return res.status(200).json({ "message": 'Wallet Details!', "result": results[0] });
+
+                    }
+
+                })
 
             })
 
