@@ -94,27 +94,19 @@ exports.getAdminLogin = function (req, res, next) {
 };
 
 exports.getAllUsers = function (req, res, next) {
+
   let numPerPage = parseInt(req.query.limit, 10) || 1;
 
-  let page = parseInt(req.query.page, 10) || 0;
-
-  let numPages;
-
-  let skip = page * numPerPage;
-
-  // Here we compute the LIMIT parameter for MySQL query
-
-  let limit = skip + "," + numPerPage;
+  let page = parseInt(req.query.page, 10) || 1;
 
   db.query(
     `SELECT count(*) as numRows FROM users`,
     async (error, results, fields) => {
-      numPages = Math.ceil(results[0].numRows / numPerPage);
 
       if (error) return next(error);
 
       db.query(
-        `SELECT * FROM users ORDER BY id_user ASC LIMIT ${limit}`,
+        `SELECT * FROM users ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
         async (error, result, fields) => {
           var responsePayload = {
             message: "User list fetched successfully.",
@@ -123,24 +115,16 @@ exports.getAllUsers = function (req, res, next) {
 
           if (error) return next(error);
 
-          if (page) {
+          if (page > 0) {
             responsePayload.pagination = {
               current: page,
               perPage: numPerPage,
               totalDocs: results[0].numRows,
               totalPages: (results[0].numRows + numPerPage - 1) / numPerPage,
               previous: page > 0 ? page - 1 : undefined,
-              next: page < numPages - 1 ? page + 1 : undefined,
+              next: page < (results[0].numRows + numPerPage - 1) / numPerPage ? page + 1 : undefined,
             };
-          } else
-            responsePayload.pagination = {
-              err:
-                "queried page " +
-                page +
-                " is >= to maximum page number " +
-                numPages,
-            };
-
+          }  
           res.json(responsePayload);
         }
       );
@@ -212,30 +196,22 @@ exports.deleteUser = function (req, res, next) {
 };
 
 exports.getAllDistributors = function (req, res, next) {
-  let numPerPage = parseInt(req.query.limit, 10) || 1;
 
-  let page = parseInt(req.query.page, 10) || 0;
+  let numPerPage = parseInt(req.query.limit, 10) || 10;
 
-  let numPages;
-
-  let skip = page * numPerPage;
-
-  // Here we compute the LIMIT parameter for MySQL query
-
-  let limit = skip + "," + numPerPage;
+  let page = parseInt(req.query.page, 10) || 1;
 
   db.query(
     `SELECT count(*) as numRows FROM referral_code`,
     async (error, results, fields) => {
-      console.log("results =>",results)
-      numPages = Math.ceil(results[0].numRows / numPerPage);
 
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.first_name, users.first_name, users.first_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed FROM users JOIN referral_code ON users.id_user = referral_code.user_id`,
+        `SELECT users.id_user, users.first_name, users.first_name, users.first_name, users.first_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed FROM users JOIN referral_code ON users.id_user = referral_code.user_id ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
         async (error, result, fields) => {
           console.log("results results=>",error)
+
           var responsePayload = {
             message: "Distributors list fetched successfully.",
             results: result,
@@ -244,22 +220,17 @@ exports.getAllDistributors = function (req, res, next) {
           if (error) return next(error);
 
           if (page) {
+
             responsePayload.pagination = {
               current: page,
               perPage: numPerPage,
               totalDocs: results[0].numRows,
               totalPages: (results[0].numRows + numPerPage - 1) / numPerPage,
               previous: page > 0 ? page - 1 : undefined,
-              next: page < numPages - 1 ? page + 1 : undefined,
+              next: page < (results[0].numRows + numPerPage - 1) / numPerPage ? page + 1 : undefined,
             };
-          } else
-            responsePayload.pagination = {
-              err:
-                "queried page " +
-                page +
-                " is >= to maximum page number " +
-                numPages,
-            };
+
+          } 
 
           res.json(responsePayload);
         }
