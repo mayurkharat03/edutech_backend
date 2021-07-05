@@ -127,6 +127,8 @@ exports.getAllUsers = function (req, res, next) {
             responsePayload.pagination = {
               current: page,
               perPage: numPerPage,
+              totalDocs: results[0].numRows,
+              totalPages: (results[0].numRows + numPerPage - 1) / numPerPage,
               previous: page > 0 ? page - 1 : undefined,
               next: page < numPages - 1 ? page + 1 : undefined,
             };
@@ -245,6 +247,8 @@ exports.getAllDistributors = function (req, res, next) {
             responsePayload.pagination = {
               current: page,
               perPage: numPerPage,
+              totalDocs: results[0].numRows,
+              totalPages: (results[0].numRows + numPerPage - 1) / numPerPage,
               previous: page > 0 ? page - 1 : undefined,
               next: page < numPages - 1 ? page + 1 : undefined,
             };
