@@ -120,9 +120,9 @@ exports.getAllUsers = function (req, res, next) {
               current: page,
               perPage: numPerPage,
               totalDocs: results[0].numRows,
-              totalPages: (results[0].numRows + numPerPage - 1) / numPerPage,
+              totalPages: Math.ceil(results[0].numRows / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < (results[0].numRows + numPerPage - 1) / numPerPage ? page + 1 : undefined,
+              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
             };
           }  
           res.json(responsePayload);
@@ -225,9 +225,92 @@ exports.getAllDistributors = function (req, res, next) {
               current: page,
               perPage: numPerPage,
               totalDocs: results[0].numRows,
-              totalPages: (results[0].numRows + numPerPage - 1) / numPerPage,
+              totalPages: Math.ceil(results[0].numRows / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < (results[0].numRows + numPerPage - 1) / numPerPage ? page + 1 : undefined,
+              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
+            };
+
+          } 
+
+          res.json(responsePayload);
+        }
+      );
+    }
+  );
+};
+
+exports.getAllUsersByKyc = function (req, res, next) {
+
+  let numPerPage = parseInt(req.query.limit, 10) || 1;
+
+  let page = parseInt(req.query.page, 10) || 1;
+
+  db.query(
+    `SELECT count(*) as numRows FROM users WHERE kyc_completed = ${req.params.kycCompleted}`,
+    async (error, results, fields) => {
+
+      if (error) return next(error);
+
+      db.query(
+        `SELECT * FROM users WHERE kyc_completed = ${req.params.kycCompleted} ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        async (error, result, fields) => {
+          var responsePayload = {
+            message: "User list fetched successfully.",
+            results: result,
+          };
+
+          if (error) return next(error);
+
+          if (page > 0) {
+            responsePayload.pagination = {
+              current: page,
+              perPage: numPerPage,
+              totalDocs: results[0].numRows,
+              totalPages: Math.ceil(results[0].numRows / numPerPage),
+              previous: page > 0 ? page - 1 : undefined,
+              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
+            };
+          }  
+          res.json(responsePayload);
+        }
+      );
+    }
+  );
+};
+
+exports.getAllDistributorsByKyc = function (req, res, next) {
+
+  let numPerPage = parseInt(req.query.limit, 10) || 10;
+
+  let page = parseInt(req.query.page, 10) || 1;
+
+  db.query(
+    `SELECT count(*) as numRows FROM referral_code WHERE kyc_completed = ${req.params.kycCompleted} `,
+    async (error, results, fields) => {
+
+      if (error) return next(error);
+
+      db.query(
+        `SELECT users.id_user, users.first_name, users.first_name, users.first_name, users.first_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed FROM users JOIN referral_code ON users.id_user = referral_code.user_id WHERE referral_code.kyc_completed = ${req.params.kycCompleted} ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        async (error, result, fields) => {
+          console.log("results results=>",error)
+
+          var responsePayload = {
+            message: "Distributors list fetched successfully.",
+            results: result,
+          };
+
+          if (error) return next(error);
+
+          if (page) {
+
+            responsePayload.pagination = {
+              current: page,
+              perPage: numPerPage,
+              totalDocs: results[0].numRows,
+              totalPages: Math.ceil(results[0].numRows / numPerPage),
+              previous: page > 0 ? page - 1 : undefined,
+              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
             };
 
           } 
