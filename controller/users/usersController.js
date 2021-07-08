@@ -529,3 +529,22 @@ exports.checkEmailId = async function (req, res, next) {
 }
 
 
+exports.updateUserDetails = async function (req, res, next) {
+
+    const userId = req.body.userId;
+    const newBillingAddress = req.body.newBillingAddress;
+    const newShippingAddress = req.body.newShippingAddress;
+
+    db.query(`UPDATE users SET billing_address = '${newBillingAddress}', shipping_address = '${newShippingAddress}' where id_user = ${userId}`, async (errorPasswordUpdate, resultsPasswordUpdate) => {
+
+        if (errorPasswordUpdate) {
+
+            return next(errorPasswordUpdate);
+
+        }
+
+        return res.status(200).json({ "message": 'Billing and Shipping Address updated successfully!' });
+
+    })
+}
+

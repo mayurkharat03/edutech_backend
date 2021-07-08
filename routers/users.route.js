@@ -12,7 +12,7 @@ router.get('/getOTPForForgotPassword/:mobileNumber', usersController.forgotPassw
 router.get('/verifyForgotPasswordOTP/:userId/:otp', usersController.verifyForgotPasswordOTP);
 router.post('/changePassword', usersController.changePassword);
 router.post('/checkEmailID', usersController.checkEmailId);
-
+router.post('/updateUserDetails', middleware.checkToken, usersController.updateUserDetails);
 
 
 module.exports = router;

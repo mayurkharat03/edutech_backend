@@ -155,6 +155,10 @@ exports.getPackageByUserId = function (req, res, next) {
 
             return res.status(200).json({ "message": 'Purchase Package by User', "result": results });
 
+        } else {
+
+            return res.status(200).json({ "message": 'Purchase Package by User', "result": results });
+
         }
 
     });
