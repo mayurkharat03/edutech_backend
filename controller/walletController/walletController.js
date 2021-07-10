@@ -24,7 +24,7 @@ exports.requestTransfer = async function (req, res, next) {
     // console.log('request', req.body);
 
     const { userId, beneficiaryType, beneficiaryName, accountNumber, ifsc, upiHandle, paymentMode, amount, email, phoneNumber, narration } = req.body;
-    // const uniqueRequestNumber = crypto.randomBytes(16).toString("hex");
+    const uniqueRequestNumber = crypto.randomBytes(16).toString("hex");
 
     db.query(`SELECT * from referral_code where user_id = ${userId}`, (errorUser, resultsUser, fields) => {
 
@@ -61,14 +61,14 @@ exports.requestTransfer = async function (req, res, next) {
 
                         }
 
-                        var hashstring = process.env.MERCHANT_KEY + "|" + accountNumber + "|" + ifsc + "|" + upiHandle + "|" + uniqueRequestNumber + "|" + amount +
-                            "|" + process.env.EASEBUZZ_SALT;
+                        var hashstring = process.env.WIRE_KEY + "|" + accountNumber + "|" + ifsc + "|" + upiHandle + "|" + uniqueRequestNumber + "|" + 1.00 +
+                            "|" + process.env.WIRE_SALT;
                         console.log('hashstring', hashstring);
                         hashstring = sha512.sha512(hashstring);
 
 
                         let payloadData = {
-                            key: process.env.MERCHANT_KEY,
+                            key: process.env.WIRE_KEY,
                             beneficiary_type: beneficiaryType,
                             beneficiary_name: beneficiaryName,
                             account_number: accountNumber,
@@ -168,14 +168,14 @@ exports.makeWireTransferFromAdmin = function (req, res, next) {
 
         if (resultsUser.length > 0) {
 
-            var hashstring = process.env.MERCHANT_KEY + "|" + accountNumber + "|" + ifsc + "|" + upiHandle + "|" + uniqueRequestNumber + "|" + amount +
-                "|" + process.env.EASEBUZZ_SALT;
+            var hashstring = process.env.WIRE_KEY + "|" + accountNumber + "|" + ifsc + "|" + upiHandle + "|" + uniqueRequestNumber + "|" + amount +
+                "|" + process.env.WIRE_SALT;
             console.log('hashstring', hashstring);
             hashstring = sha512.sha512(hashstring);
 
 
             let payloadData = {
-                key: process.env.MERCHANT_KEY,
+                key: process.env.WIRE_KEY,
                 beneficiary_type: beneficiaryType,
                 beneficiary_name: beneficiaryName,
                 account_number: accountNumber,
