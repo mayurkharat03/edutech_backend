@@ -394,3 +394,113 @@ exports.getDistributorTreeById = function (req, res, next) {
     }
   );
 };
+
+exports.searchAllDistributors = async (req, res, next) =>{
+
+  let numPerPage = parseInt(req.query.limit) || 10;
+
+  let page = parseInt(req.query.page) || 1;
+
+  let searchKey = req.query.searchKey;
+
+  db.query(
+    `SELECT count(*) as numRows FROM referral_code`,
+    async (error, results, fields) => {
+
+      if (error) return next(error);
+
+      db.query(
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE users.first_name LIKE '${searchKey}%' OR users.middle_name LIKE '${searchKey}%' OR users.last_name LIKE '${searchKey}%' OR users.id_user = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        async (error, result, fields) => {
+
+          const promise3 = new Promise((resolve, reject) => {
+
+            for (let index = 0; index < result.length; index++) {
+
+              const element = result[index];
+
+
+                db.query(`SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,async (error, data, fields) => {
+
+                  element.childCount = data.length;
+
+                  if(index == result.length - 1){
+
+                    resolve();
+
+                  }
+
+                });
+            }
+          });
+
+          await promise3;
+         
+          var responsePayload = {
+            message: "Distributors list fetched successfully.",
+            results: result,
+          };
+
+          if (error) return next(error);
+
+          if (page) {
+
+            responsePayload.pagination = {
+              current: page,
+              perPage: numPerPage,
+              totalDocs: result.length,
+              totalPages: Math.ceil(result.length / numPerPage),
+              previous: page > 0 ? page - 1 : undefined,
+              next: page < Math.ceil(result.length / numPerPage) ? page + 1 : undefined,
+            };
+
+          } 
+
+          res.json(responsePayload);
+        }
+      );
+    }
+  );
+};
+
+exports.searchAllUsers = function (req, res, next) {
+
+  let numPerPage = parseInt(req.query.limit, 10) || 10;
+
+  let page = parseInt(req.query.page, 10) || 1;
+
+  let searchKey = req.query.searchKey;
+
+  db.query(
+    `SELECT count(*) as numRows FROM users`,
+    async (error, results, fields) => {
+
+      if (error) return next(error);
+
+      db.query(
+        `SELECT * FROM users WHERE first_name LIKE '${searchKey}%' OR middle_name LIKE '${searchKey}%' OR last_name LIKE '${searchKey}%' OR id_user = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        async (error, result, fields) => {
+
+          var responsePayload = {
+            message: "User list fetched successfully.",
+            results: result,
+          };
+
+          if (error) return next(error);
+
+          if (page > 0) {
+            responsePayload.pagination = {
+              current: page,
+              perPage: numPerPage,
+              totalDocs: result.length,
+              totalPages: Math.ceil(result.length / numPerPage),
+              previous: page > 0 ? page - 1 : undefined,
+              next: page < Math.ceil(result.length / numPerPage) ? page + 1 : undefined,
+            };
+          }  
+          res.json(responsePayload);
+        }
+      );
+    }
+  );
+};
