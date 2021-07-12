@@ -410,7 +410,7 @@ exports.searchAllDistributors = async (req, res, next) =>{
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE users.first_name LIKE '${searchKey}%' OR users.middle_name LIKE '${searchKey}%' OR users.last_name LIKE '${searchKey}%' OR users.id_user = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE users.first_name LIKE '${searchKey}%' OR users.middle_name LIKE '${searchKey}%' OR users.last_name LIKE '${searchKey}%' OR referral_code.id_referral_code = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
         async (error, result, fields) => {
 
           const promise3 = new Promise((resolve, reject) => {
