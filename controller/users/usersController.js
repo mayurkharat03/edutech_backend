@@ -424,15 +424,27 @@ exports.getDashboardDetails = function (req, res, next) {
 
                     }
 
-                    results[0].isAadhaarFrontUploaded = results[0].aadhaar_front == null || 'undefined' ? 0 : 1;
-                    results[0].isAadhaarBackUploaded = results[0].aadhaar_back == null || 'undefined' ? 0 : 1;
-                    results[0].isPanUploaded = results[0].pancard_photo == null || 'undefined' ? 0 : 1;
-                    results[0].isProfileUploaded = results[0].photo == null || 'undefined' ? 0 : 1;
-                    results[0].referralStatus = resultsReferralCode[0].status;
-                    results[0].resultReferral = resultsReferralCode;
-                    results[0].resultReferral[0].walletAmount = 0;
+                    db.query(`SELECT * from student_details where user_id = ${results[0].id_user}`, async (errorStudent, resultsStudent, fields) => {
 
-                    return res.status(200).json({ "message": 'Dashboard Details', "result": results });
+                        if (errorStudent) {
+
+                            return next(errorStudent);
+
+                        }
+
+
+                        results[0].isAadhaarFrontUploaded = results[0].aadhaar_front == null || 'undefined' ? 0 : 1;
+                        results[0].isAadhaarBackUploaded = results[0].aadhaar_back == null || 'undefined' ? 0 : 1;
+                        results[0].isPanUploaded = results[0].pancard_photo == null || 'undefined' ? 0 : 1;
+                        results[0].isProfileUploaded = results[0].photo == null || 'undefined' ? 0 : 1;
+                        results[0].referralStatus = resultsReferralCode[0].status;
+                        results[0].resultReferral = resultsReferralCode;
+                        results[0].resultReferral[0].walletAmount = 0;
+                        results[0].studentDetails = resultsStudent;
+
+                        return res.status(200).json({ "message": 'Dashboard Details', "result": results });
+
+                    })
 
 
                 })
