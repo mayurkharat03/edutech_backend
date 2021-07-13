@@ -10,12 +10,14 @@ router.post('/getAdminLogin', adminController.getAdminLogin);
 // User router
 router.get('/userDelete', middleware.checkToken, adminController.deleteUser);
 router.get('/getAllUsers', middleware.checkToken, adminController.getAllUsers);
+router.get('/searchAllUsers', middleware.checkToken, adminController.searchAllUsers);
 router.get('/getAllUsersByKyc/:kycCompleted', middleware.checkToken, adminController.getAllUsersByKyc);
 router.put('/userKycApproval/:id', middleware.checkToken, adminController.userKycApproval);
 router.put('/distributorKycApproval/:id', middleware.checkToken, adminController.distributorKycApproval);
 
 //Distributer routes
 router.get('/getAllDistributors', middleware.checkToken, adminController.getAllDistributors);
+router.get('/searchAllDistributors', middleware.checkToken, adminController.searchAllDistributors);
 router.get('/getAllDistributorsByKyc/:kycCompleted', middleware.checkToken, adminController.getAllDistributorsByKyc);
 router.get('/getDistributorTreeById/:id', middleware.checkToken, adminController.getDistributorTreeById);
 
