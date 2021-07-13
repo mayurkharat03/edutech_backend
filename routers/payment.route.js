@@ -7,7 +7,7 @@ router.post('/createPaymentOrder', middleware.checkToken, paymentController.crea
 router.post('/confirmPaymentStatus', middleware.checkToken, paymentController.confirmPaymentStatus);
 router.get('/getRecursiveTreeByUserId/:userId', middleware.checkToken, paymentController.getRecursiveTreeByUserId);
 router.get('/getWalletDetailsByUserId/:userId', middleware.checkToken, paymentController.getWalletDetailsByUserId);
-
+// router.get('/sendTransactionDetailsToAllern', paymentController.sendTransactionDetailsToAllern);
 
 
 module.exports = router;

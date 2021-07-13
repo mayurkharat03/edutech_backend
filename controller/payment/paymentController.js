@@ -193,6 +193,7 @@ exports.confirmPaymentStatus = async function (req, res, next) {
                 }
 
                 if (resultsUser[0]) {
+                    // console.log('resultsUser[0]', resultsUser[0]);
                     // divideCommissionInTree(req.body.userId, req.body.amount);
                     return res.status(200).json({ "message": 'Payment already done', "result": { results: req.body }, "paymentSuccessStatus": true });
 
@@ -207,6 +208,7 @@ exports.confirmPaymentStatus = async function (req, res, next) {
 
                         }
                         divideCommissionInTree(req.body.userId, req.body.amount);
+                        sendTransactionDetailsToAllern(req.body);
                         return res.status(200).json({ "message": 'Payment successfully', "result": { results: req.body }, "paymentSuccessStatus": true });
 
                     })
@@ -410,6 +412,96 @@ async function getImmediateReferralByUserId(userId) {
         }
 
     })
+
+}
+
+async function sendTransactionDetailsToAllern(payloadData) {
+
+    // let payloadData = req.body;
+    let transactionDate = new Date();
+    transactionDate = transactionDate.toISOString();
+
+    axios.post(`http://devapi.alrn.in/Portal/GetSSOToken`, { "clientName": process.env.CLIENT_NAME, "clientId": process.env.CLIENT_ID })
+        .then(response => {
+            console.log('my response data', response.data);
+            if (response.data.isSuccess == true) {
+
+                db.query(`SELECT * from payment_order_details where transaction_id = '${payloadData.txnid}'`, async (error, results, fields) => {
+
+                    console.log(error)
+
+                    if (results[0]) {
+
+                        let allernData = {
+                            "transactionId": payloadData.txnid,
+                            "customerName": payloadData.firstname,
+                            "contactNo": payloadData.phone,
+                            "email": payloadData.email,
+                            "address1": results[0].address1,
+                            "address2": results[0].address2,
+                            "address3": "",
+                            "city": results[0].city,
+                            "state": results[0].state,
+                            "pinCode": results[0].zipcode,
+                            "transactionDate": transactionDate,
+                            "transactionAmount": Number(payloadData.amount),
+                            "invoiceNumber": payloadData.txnid,
+                            "invoiceDate": transactionDate,
+                            "gstTaxName": "GST",
+                            "gstTaxBase": 0,
+                            "gstTaxRateCGSTN": 0,
+                            "gstTaxRateSGSTN": 0,
+                            "gstTaxRateIGSTN": 0,
+                            "gstTaxTotal": 0,
+                            "gstTaxCGSTN": 0,
+                            "gstTaxSGSTN": 0,
+                            "gstTaxIGSTN": 0,
+                            "productList": [
+                                {
+                                    "productId": payloadData.packagePurchaseList,
+                                    "quantity": 1,
+                                    "price": Number(payloadData.amount)
+                                }
+                            ]
+                        }
+                        // console.log(allernData, response.data.token);
+                        let headerConfig = {
+                            headers: {
+                                Token: response.data.token,
+                            }
+                        }
+
+                        axios.post(`http://devapi.alrn.in/Portal/PostTransaction`, allernData, headerConfig)
+                            .then(responseData => {
+
+                                console.log('my response data post call', responseData.data);
+
+                                if (responseData.data.isSuccess === true) {
+
+                                    // axios.post(`http://smpp.webtechsolution.co/http-jsonapi.php?senderid=LEARNW&route=1&templateid=1207162070319712893&authentic-key=34344c6561726e77656c6c3937301620031366&number=${phoneNumber}&message=Hello,%20Your%20Order%20has%20been%20place%20with%transaction%20number:%20Thank%20You,Learn%20Well%20Technocraft&username=Learnwell&password=Learnwell`)
+                                    //     .then(response => {
+                                    //         console.log(response.data.Code);
+                                    //     })
+
+                                }
+
+
+                            })
+                            .catch(errorData => {
+                                console.log(errorData);
+                            });
+
+
+                    }
+
+                })
+
+
+            }
+        })
+        .catch(error => {
+            console.log(error);
+        });
 
 }
 

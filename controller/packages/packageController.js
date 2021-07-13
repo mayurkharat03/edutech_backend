@@ -15,16 +15,17 @@ var db = require('../../config/database');
 
 exports.addPackage = async function (req, res, next) {
 
-    console.log('request', req.body);
 
     const purchaseDate = getDateFormat(new Date());
     const expiryDate = getDateFormat(addOneYearToDate(new Date()));
 
     console.log(purchaseDate, expiryDate);
-    const { boardId, standardId, userId, totalPrice } = req.body;
+    const { boardId, standardId, userId, standardPackageListIDs, totalPrice } = req.body;
 
 
-    db.query(`INSERT INTO package_purchase (board_id, standard_id, user_id, total_price, purchase_date, expiry_date, status, created_date, updated_date) VALUES (${boardId}, ${standardId}, ${userId}, '${totalPrice}', '${purchaseDate}', '${expiryDate}', 0, now(), now())`, (error, results) => {
+    db.query(`INSERT INTO package_purchase (board_id, standard_id, standard_package_ids, user_id, total_price, purchase_date, expiry_date, status, created_date, updated_date) VALUES (${boardId}, ${standardId}, '${standardPackageListIDs}', ${userId}, '${totalPrice}', '${purchaseDate}', '${expiryDate}', 0, now(), now())`, (error, results) => {
+
+        // console.log('request', error);
 
         if (error) {
 
@@ -94,7 +95,7 @@ exports.getStandardsByBoardId = function (req, res, next) {
 
     const boardId = req.params.boardId;
 
-    db.query(`SELECT * from standards where board_id = ${boardId}`, async (error, results, fields) => {
+    db.query(`SELECT * from standards where board_id = ${boardId} ORDER BY LENGTH(standard_name), standard_name`, async (error, results, fields) => {
 
         if (error) {
 
