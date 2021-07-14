@@ -278,7 +278,7 @@ exports.getWalletHistoryByUserId = function (req, res, next) {
 
 exports.getAllWalletRequestForAdmin = function (req, res, next) {
 
-    db.query(`SELECT * from wallet_request where amount >= '10000' and request_status = 0`, (error, results, fields) => {
+    db.query(`SELECT * from wallet_request where amount >= '10' and request_status = 0`, (error, results, fields) => {
 
         if (error) {
 
