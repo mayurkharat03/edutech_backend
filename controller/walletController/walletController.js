@@ -276,3 +276,26 @@ exports.getWalletHistoryByUserId = function (req, res, next) {
 }
 
 
+exports.getAllWalletRequestForAdmin = function (req, res, next) {
+
+    db.query(`SELECT * from wallet_request where amount >= '10' and request_status = 0`, (error, results, fields) => {
+
+        if (error) {
+
+            return next(error);
+
+        }
+
+
+        if (results) {
+
+            return res.status(200).json({ "message": 'Wallet Request!', result: results });
+
+        } else {
+
+            return res.status(401).json({ "message": 'Wallet Request does not exist!' });
+
+        }
+    })
+
+}
