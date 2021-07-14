@@ -132,6 +132,26 @@ exports.getAllUsers = function (req, res, next) {
   );
 };
 
+exports.getUserById = function (req, res, next) {
+
+  const userId = req.params.userId;
+
+  db.query(
+    `SELECT * FROM users WHERE id_user = ${userId} ORDER BY id_user ASC`,
+    async (error, result, fields) => {
+      var responsePayload = {
+        message: "User list fetched successfully.",
+        results: result,
+      };
+
+      if (error) return next(error);
+
+        
+      res.json(responsePayload);
+    }
+  );
+};
+
 exports.userKycApproval = function (req, res, next) {
 
   const userId = req.params.id;
@@ -179,7 +199,7 @@ exports.deleteUser = function (req, res, next) {
   const userId = req.query.userId;
 
   db.query(
-    `UPDATE users SET approve_user = 0 where id_user = '${userId}'`,
+    `UPDATE users SET is_active = 0 where id_user = '${userId}'`,
     async (error, results, fields) => {
 
       if (error) return next(error);
@@ -259,6 +279,55 @@ exports.getAllDistributors = async (req, res, next) =>{
           res.json(responsePayload);
         }
       );
+    }
+  );
+};
+
+exports.getDistributorById = function (req, res, next) {
+
+  const distributorId = req.params.distributorId;
+
+  db.query(
+    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE id_referral_code = ${distributorId} ORDER BY id_user ASC `,
+    async (error, results, fields) => {
+
+      if (error) return next(error);
+
+      if (results.length > 0) {
+
+        const promise3 = new Promise((resolve, reject) => {
+
+          for (let index = 0; index < results.length; index++) {
+
+            const element = results[index];
+
+            db.query(
+              `SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,async (error, data, fields) => {
+
+                element.childCount = data.length;
+
+                if(index == results.length - 1){
+
+                  resolve();
+
+                }
+                
+              });
+          }
+        });
+        
+        await promise3;
+
+        return res.status(200).json({
+          message: "User tree fetched successfully",
+          result: results,
+        });
+
+      } else {
+
+        return res.status(200).json({ message: "User tree not found." });
+        
+      }
     }
   );
 };
@@ -351,7 +420,7 @@ exports.getDistributorTreeById = function (req, res, next) {
   const userId = req.params.id;
 
   db.query(
-    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.kyc_completed, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, users_tree.id_users_tree, users_tree.user_id FROM users JOIN users_tree ON users.id_user = users_tree.user_id WHERE users_tree.referral_user_id = ${userId}`,
+    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.kyc_completed, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, users_tree.id_users_tree, users_tree.user_id, users_tree.referral_user_id FROM users JOIN users_tree ON users.id_user = users_tree.user_id WHERE users_tree.referral_user_id = ${userId}`,
     async (error, results, fields) => {
 
       if (error) return next(error);
