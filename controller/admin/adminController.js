@@ -94,7 +94,6 @@ exports.getAdminLogin = function (req, res, next) {
 };
 
 exports.getAllUsers = function (req, res, next) {
-
   let numPerPage = parseInt(req.query.limit, 10) || 1;
 
   let page = parseInt(req.query.page, 10) || 1;
@@ -102,11 +101,12 @@ exports.getAllUsers = function (req, res, next) {
   db.query(
     `SELECT count(*) as numRows FROM users`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       db.query(
-        `SELECT * FROM users ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        `SELECT * FROM users ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+          (page - 1) * numPerPage
+        }`,
         async (error, result, fields) => {
           var responsePayload = {
             message: "User list fetched successfully.",
@@ -122,9 +122,12 @@ exports.getAllUsers = function (req, res, next) {
               totalDocs: results[0].numRows,
               totalPages: Math.ceil(results[0].numRows / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
+              next:
+                page < Math.ceil(results[0].numRows / numPerPage)
+                  ? page + 1
+                  : undefined,
             };
-          }  
+          }
           res.json(responsePayload);
         }
       );
@@ -133,7 +136,6 @@ exports.getAllUsers = function (req, res, next) {
 };
 
 exports.getUserById = function (req, res, next) {
-
   const userId = req.params.userId;
 
   db.query(
@@ -146,77 +148,63 @@ exports.getUserById = function (req, res, next) {
 
       if (error) return next(error);
 
-        
       res.json(responsePayload);
     }
   );
 };
 
 exports.userKycApproval = function (req, res, next) {
-
   const userId = req.params.id;
 
   db.query(
     `UPDATE users SET kyc_completed = 1 where id_user = '${userId}'`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       if (results) {
-
         return res.status(200).json({
           message: "User kyc updated successfully",
         });
-        
       }
     }
   );
 };
 
 exports.distributorKycApproval = function (req, res, next) {
-
   const userId = req.params.id;
 
   db.query(
     `UPDATE referral_code SET kyc_completed = 1 where user_id = '${userId}'`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       if (results) {
-
         return res.status(200).json({
           message: "Distributor kyc updated successfully",
         });
-
       }
     }
   );
 };
 
 exports.deleteUser = function (req, res, next) {
-
   const userId = req.query.userId;
 
   db.query(
     `UPDATE users SET is_active = 0 where id_user = '${userId}'`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       if (results) {
-
         return res.status(200).json({
           message: "User deleted successfully",
         });
-
       }
     }
   );
 };
 
-exports.getAllDistributors = async (req, res, next) =>{
-
+exports.getAllDistributors = async (req, res, next) => {
   let numPerPage = parseInt(req.query.limit) || 1;
 
   let page = parseInt(req.query.page) || 1;
@@ -224,38 +212,34 @@ exports.getAllDistributors = async (req, res, next) =>{
   db.query(
     `SELECT count(*) as numRows FROM referral_code`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+          (page - 1) * numPerPage
+        }`,
         async (error, result, fields) => {
-
           const promise3 = new Promise((resolve, reject) => {
-
             for (let index = 0; index < result.length; index++) {
-
               const element = result[index];
 
-              if(index == 0){
+              if (index == 0) {
+                db.query(
+                  `SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,
+                  async (error, data, fields) => {
+                    element.childCount = data.length;
 
-                db.query(`SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,async (error, data, fields) => {
-
-                  element.childCount = data.length;
-
-                  if(index == result.length - 1){
-
-                    resolve();
-
+                    if (index == result.length - 1) {
+                      resolve();
+                    }
                   }
-
-                });
+                );
               }
             }
           });
 
           await promise3;
-         
+
           var responsePayload = {
             message: "Distributors list fetched successfully.",
             results: result,
@@ -264,17 +248,18 @@ exports.getAllDistributors = async (req, res, next) =>{
           if (error) return next(error);
 
           if (page) {
-
             responsePayload.pagination = {
               current: page,
               perPage: numPerPage,
               totalDocs: results[0].numRows,
               totalPages: Math.ceil(results[0].numRows / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
+              next:
+                page < Math.ceil(results[0].numRows / numPerPage)
+                  ? page + 1
+                  : undefined,
             };
-
-          } 
+          }
 
           res.json(responsePayload);
         }
@@ -284,56 +269,45 @@ exports.getAllDistributors = async (req, res, next) =>{
 };
 
 exports.getDistributorById = function (req, res, next) {
-
   const distributorId = req.params.distributorId;
 
   db.query(
     `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE id_referral_code = ${distributorId} ORDER BY id_user ASC `,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       if (results.length > 0) {
-
         const promise3 = new Promise((resolve, reject) => {
-
           for (let index = 0; index < results.length; index++) {
-
             const element = results[index];
 
             db.query(
-              `SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,async (error, data, fields) => {
-
+              `SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,
+              async (error, data, fields) => {
                 element.childCount = data.length;
 
-                if(index == results.length - 1){
-
+                if (index == results.length - 1) {
                   resolve();
-
                 }
-                
-              });
+              }
+            );
           }
         });
-        
+
         await promise3;
 
         return res.status(200).json({
           message: "User tree fetched successfully",
           result: results,
         });
-
       } else {
-
         return res.status(200).json({ message: "User tree not found." });
-        
       }
     }
   );
 };
 
 exports.getAllUsersByKyc = function (req, res, next) {
-
   let numPerPage = parseInt(req.query.limit, 10) || 1;
 
   let page = parseInt(req.query.page, 10) || 1;
@@ -341,11 +315,14 @@ exports.getAllUsersByKyc = function (req, res, next) {
   db.query(
     `SELECT count(*) as numRows FROM users WHERE kyc_completed = ${req.params.kycCompleted}`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       db.query(
-        `SELECT * FROM users WHERE kyc_completed = ${req.params.kycCompleted} ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        `SELECT * FROM users WHERE kyc_completed = ${
+          req.params.kycCompleted
+        } ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+          (page - 1) * numPerPage
+        }`,
         async (error, result, fields) => {
           var responsePayload = {
             message: "User list fetched successfully.",
@@ -361,9 +338,12 @@ exports.getAllUsersByKyc = function (req, res, next) {
               totalDocs: results[0].numRows,
               totalPages: Math.ceil(results[0].numRows / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
+              next:
+                page < Math.ceil(results[0].numRows / numPerPage)
+                  ? page + 1
+                  : undefined,
             };
-          }  
+          }
           res.json(responsePayload);
         }
       );
@@ -372,7 +352,6 @@ exports.getAllUsersByKyc = function (req, res, next) {
 };
 
 exports.getAllDistributorsByKyc = function (req, res, next) {
-
   let numPerPage = parseInt(req.query.limit, 10) || 10;
 
   let page = parseInt(req.query.page, 10) || 1;
@@ -380,13 +359,16 @@ exports.getAllDistributorsByKyc = function (req, res, next) {
   db.query(
     `SELECT count(*) as numRows FROM referral_code WHERE kyc_completed = ${req.params.kycCompleted} `,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed FROM users JOIN referral_code ON users.id_user = referral_code.user_id WHERE referral_code.kyc_completed = ${req.params.kycCompleted} ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users JOIN referral_code ON users.id_user = referral_code.user_id WHERE referral_code.kyc_completed = ${
+          req.params.kycCompleted
+        } ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+          (page - 1) * numPerPage
+        }`,
         async (error, result, fields) => {
-          console.log("results results=>",error)
+          console.log("results results=>", error);
 
           var responsePayload = {
             message: "Distributors list fetched successfully.",
@@ -396,17 +378,18 @@ exports.getAllDistributorsByKyc = function (req, res, next) {
           if (error) return next(error);
 
           if (page) {
-
             responsePayload.pagination = {
               current: page,
               perPage: numPerPage,
               totalDocs: results[0].numRows,
               totalPages: Math.ceil(results[0].numRows / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < Math.ceil(results[0].numRows / numPerPage) ? page + 1 : undefined,
+              next:
+                page < Math.ceil(results[0].numRows / numPerPage)
+                  ? page + 1
+                  : undefined,
             };
-
-          } 
+          }
 
           res.json(responsePayload);
         }
@@ -416,56 +399,44 @@ exports.getAllDistributorsByKyc = function (req, res, next) {
 };
 
 exports.getDistributorTreeById = function (req, res, next) {
-
   const userId = req.params.id;
-
   db.query(
-    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.kyc_completed, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, users_tree.id_users_tree, users_tree.user_id, users_tree.referral_user_id FROM users JOIN users_tree ON users.id_user = users_tree.user_id WHERE users_tree.referral_user_id = ${userId}`,
+    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.kyc_completed, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, users_tree.id_users_tree, users_tree.user_id, users_tree.referral_user_id, r.code FROM users JOIN users_tree ON users.id_user = users_tree.user_id INNER JOIN referral_code r ON r.user_id = users_tree.user_id WHERE users_tree.referral_user_id = ${userId}`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       if (results.length > 0) {
-
         const promise3 = new Promise((resolve, reject) => {
-
           for (let index = 0; index < results.length; index++) {
-
             const element = results[index];
 
             db.query(
-              `SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,async (error, data, fields) => {
-
+              `SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,
+              async (error, data, fields) => {
                 element.childCount = data.length;
 
-                if(index == results.length - 1){
-
+                if (index == results.length - 1) {
                   resolve();
-
                 }
-                
-              });
+              }
+            );
           }
         });
-        
+
         await promise3;
 
         return res.status(200).json({
           message: "User tree fetched successfully",
           result: results,
         });
-
       } else {
-
         return res.status(200).json({ message: "User tree not found." });
-        
       }
     }
   );
 };
 
-exports.searchAllDistributors = async (req, res, next) =>{
-
+exports.searchAllDistributors = async (req, res, next) => {
   let numPerPage = parseInt(req.query.limit) || 10;
 
   let page = parseInt(req.query.page) || 1;
@@ -475,36 +446,32 @@ exports.searchAllDistributors = async (req, res, next) =>{
   db.query(
     `SELECT count(*) as numRows FROM referral_code`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE users.first_name LIKE '${searchKey}%' OR users.middle_name LIKE '${searchKey}%' OR users.last_name LIKE '${searchKey}%' OR referral_code.id_referral_code = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE users.first_name LIKE '${searchKey}%' OR users.middle_name LIKE '${searchKey}%' OR users.last_name LIKE '${searchKey}%' OR referral_code.id_referral_code = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+          (page - 1) * numPerPage
+        }`,
         async (error, result, fields) => {
-
           const promise3 = new Promise((resolve, reject) => {
-
             for (let index = 0; index < result.length; index++) {
-
               const element = result[index];
 
-
-                db.query(`SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,async (error, data, fields) => {
-
+              db.query(
+                `SELECT * FROM users_tree WHERE referral_user_id = ${element.id_user}`,
+                async (error, data, fields) => {
                   element.childCount = data.length;
 
-                  if(index == result.length - 1){
-
+                  if (index == result.length - 1) {
                     resolve();
-
                   }
-
-                });
+                }
+              );
             }
           });
 
           await promise3;
-         
+
           var responsePayload = {
             message: "Distributors list fetched successfully.",
             results: result,
@@ -513,17 +480,18 @@ exports.searchAllDistributors = async (req, res, next) =>{
           if (error) return next(error);
 
           if (page) {
-
             responsePayload.pagination = {
               current: page,
               perPage: numPerPage,
               totalDocs: result.length,
               totalPages: Math.ceil(result.length / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < Math.ceil(result.length / numPerPage) ? page + 1 : undefined,
+              next:
+                page < Math.ceil(result.length / numPerPage)
+                  ? page + 1
+                  : undefined,
             };
-
-          } 
+          }
 
           res.json(responsePayload);
         }
@@ -533,7 +501,6 @@ exports.searchAllDistributors = async (req, res, next) =>{
 };
 
 exports.searchAllUsers = function (req, res, next) {
-
   let numPerPage = parseInt(req.query.limit, 10) || 10;
 
   let page = parseInt(req.query.page, 10) || 1;
@@ -543,13 +510,13 @@ exports.searchAllUsers = function (req, res, next) {
   db.query(
     `SELECT count(*) as numRows FROM users`,
     async (error, results, fields) => {
-
       if (error) return next(error);
 
       db.query(
-        `SELECT * FROM users WHERE first_name LIKE '${searchKey}%' OR middle_name LIKE '${searchKey}%' OR last_name LIKE '${searchKey}%' OR id_user = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${(page-1) * numPerPage}`,
+        `SELECT * FROM users WHERE first_name LIKE '${searchKey}%' OR middle_name LIKE '${searchKey}%' OR last_name LIKE '${searchKey}%' OR id_user = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+          (page - 1) * numPerPage
+        }`,
         async (error, result, fields) => {
-
           var responsePayload = {
             message: "User list fetched successfully.",
             results: result,
@@ -564,9 +531,12 @@ exports.searchAllUsers = function (req, res, next) {
               totalDocs: result.length,
               totalPages: Math.ceil(result.length / numPerPage),
               previous: page > 0 ? page - 1 : undefined,
-              next: page < Math.ceil(result.length / numPerPage) ? page + 1 : undefined,
+              next:
+                page < Math.ceil(result.length / numPerPage)
+                  ? page + 1
+                  : undefined,
             };
-          }  
+          }
           res.json(responsePayload);
         }
       );
