@@ -215,7 +215,7 @@ exports.getAllDistributors = async (req, res, next) => {
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.billing_address, users.shipping_address, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
           (page - 1) * numPerPage
         }`,
         async (error, result, fields) => {
@@ -272,7 +272,7 @@ exports.getDistributorById = function (req, res, next) {
   const distributorId = req.params.distributorId;
 
   db.query(
-    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE id_referral_code = ${distributorId} ORDER BY id_user ASC `,
+    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.billing_address, users.shipping_address, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE id_referral_code = ${distributorId} ORDER BY id_user ASC `,
     async (error, results, fields) => {
       if (error) return next(error);
 
@@ -362,7 +362,7 @@ exports.getAllDistributorsByKyc = function (req, res, next) {
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users JOIN referral_code ON users.id_user = referral_code.user_id WHERE referral_code.kyc_completed = ${
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.billing_address, users.shipping_address, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users JOIN referral_code ON users.id_user = referral_code.user_id WHERE referral_code.kyc_completed = ${
           req.params.kycCompleted
         } ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
           (page - 1) * numPerPage
@@ -401,7 +401,7 @@ exports.getAllDistributorsByKyc = function (req, res, next) {
 exports.getDistributorTreeById = function (req, res, next) {
   const userId = req.params.id;
   db.query(
-    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.kyc_completed, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, users_tree.id_users_tree, users_tree.user_id, users_tree.referral_user_id, r.code FROM users JOIN users_tree ON users.id_user = users_tree.user_id INNER JOIN referral_code r ON r.user_id = users_tree.user_id WHERE users_tree.referral_user_id = ${userId}`,
+    `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.billing_address, users.shipping_address, users.aadhaar_card, users.pan_card, users.kyc_completed, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, users_tree.id_users_tree, users_tree.user_id, users_tree.referral_user_id, r.code FROM users JOIN users_tree ON users.id_user = users_tree.user_id INNER JOIN referral_code r ON r.user_id = users_tree.user_id WHERE users_tree.referral_user_id = ${userId}`,
     async (error, results, fields) => {
       if (error) return next(error);
 
@@ -449,7 +449,7 @@ exports.searchAllDistributors = async (req, res, next) => {
       if (error) return next(error);
 
       db.query(
-        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE users.first_name LIKE '${searchKey}%' OR users.middle_name LIKE '${searchKey}%' OR users.last_name LIKE '${searchKey}%' OR referral_code.id_referral_code = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
+        `SELECT users.id_user, users.first_name, users.middle_name, users.last_name, users.email, users.phone_number, users.gender, users.date_of_birth, users.photo, users.billing_address, users.shipping_address, users.aadhaar_card, users.pan_card, users.approve_user, users.aadhaar_front, users.aadhaar_back, users.pancard_photo, users.created_date, users.updated_date, referral_code.id_referral_code, referral_code.kyc_completed, referral_code.code FROM users INNER JOIN referral_code ON users.id_user = referral_code.user_id WHERE users.first_name LIKE '${searchKey}%' OR users.middle_name LIKE '${searchKey}%' OR users.last_name LIKE '${searchKey}%' OR referral_code.id_referral_code = '${searchKey}' ORDER BY id_user ASC LIMIT ${numPerPage} OFFSET ${
           (page - 1) * numPerPage
         }`,
         async (error, result, fields) => {
