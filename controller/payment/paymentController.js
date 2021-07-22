@@ -415,15 +415,17 @@ async function getImmediateReferralByUserId(userId) {
 
 }
 
+// exports.sendTransactionDetailsToAllern = async function (req, res, next) {
+//     let payloadData = req.body;
 async function sendTransactionDetailsToAllern(payloadData) {
 
-    // let payloadData = req.body;
+
     let transactionDate = new Date();
     transactionDate = transactionDate.toISOString();
 
     axios.post(`http://devapi.alrn.in/Portal/GetSSOToken`, { "clientName": process.env.CLIENT_NAME, "clientId": process.env.CLIENT_ID })
         .then(response => {
-            console.log('my response data', response.data);
+            // console.log('my response data', response.data);
             if (response.data.isSuccess == true) {
 
                 db.query(`SELECT * from payment_order_details where transaction_id = '${payloadData.txnid}'`, async (error, results, fields) => {
@@ -447,6 +449,7 @@ async function sendTransactionDetailsToAllern(payloadData) {
                             "transactionAmount": Number(payloadData.amount),
                             "invoiceNumber": payloadData.txnid,
                             "invoiceDate": transactionDate,
+                            "invoiceLink": 'http://www.orimi.com/pdf-test.pdf',
                             "gstTaxName": "GST",
                             "gstTaxBase": 0,
                             "gstTaxRateCGSTN": 0,
@@ -456,20 +459,35 @@ async function sendTransactionDetailsToAllern(payloadData) {
                             "gstTaxCGSTN": 0,
                             "gstTaxSGSTN": 0,
                             "gstTaxIGSTN": 0,
-                            "productList": [
-                                {
-                                    "productId": payloadData.packagePurchaseList,
-                                    "quantity": 1,
-                                    "price": Number(payloadData.amount)
-                                }
-                            ]
+
                         }
+
+                        let productList = [];
+
+                        let tempData = payloadData.packagePurchaseList.split(',');
+
+                        tempData.map((item, index) => {
+
+                            productList.push({
+                                "productId": item,
+                                "quantity": 1,
+                                "price": Number(payloadData.amount)
+                            })
+
+                        })
+
+                        // console.log('productList', productList);
+
+                        allernData.productList = productList;
+
                         // console.log(allernData, response.data.token);
                         let headerConfig = {
                             headers: {
                                 Token: response.data.token,
                             }
                         }
+
+                        // console.log('allernData', allernData);
 
                         axios.post(`http://devapi.alrn.in/Portal/PostTransaction`, allernData, headerConfig)
                             .then(responseData => {
@@ -484,6 +502,11 @@ async function sendTransactionDetailsToAllern(payloadData) {
                                     //     })
 
                                 }
+
+                                axios.post(`http://smpp.webtechsolution.co/http-jsonapi.php?senderid=LEARNW&route=1&templateid=1207162070319712893&authentic-key=34344c6561726e77656c6c3937301620031366&number=${payloadData.phone}&message=Hello,%20Your%20Order%20has%20been%20place%20successfully!%20Thank%20You,EduTeck&username=Learnwell&password=Learnwell`)
+                                    .then(response => {
+                                        console.log(response.data.Code);
+                                    })
 
 
                             })

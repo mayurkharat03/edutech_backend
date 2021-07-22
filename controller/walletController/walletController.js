@@ -26,7 +26,7 @@ exports.requestTransfer = async function (req, res, next) {
     const { userId, beneficiaryType, beneficiaryName, accountNumber, ifsc, upiHandle, paymentMode, amount, email, phoneNumber, narration } = req.body;
     const uniqueRequestNumber = crypto.randomBytes(16).toString("hex");
 
-    db.query(`SELECT * from referral_code where user_id = ${userId}`, (errorUser, resultsUser, fields) => {
+    db.query(`SELECT * from referral_code where user_id = ${userId} and status = 1`, (errorUser, resultsUser, fields) => {
 
         if (errorUser) {
 
@@ -147,7 +147,7 @@ exports.requestTransfer = async function (req, res, next) {
 
         } else {
 
-            return res.status(400).json({ "message": 'User Does Not exist!' });
+            return res.status(400).json({ "message": 'User Does Not exist or User is not approved!' });
 
         }
     });
@@ -296,6 +296,26 @@ exports.getAllWalletRequestForAdmin = function (req, res, next) {
             return res.status(401).json({ "message": 'Wallet Request does not exist!' });
 
         }
+    })
+
+}
+
+
+exports.blockOrUnblockWalletByUserIdForAdminPanel = function (req, res, next) {
+
+    const userId = req.params.userId;
+    const walletStatus = req.params.walletStatus;
+
+    db.query(`UPDATE referral_code SET status = ${walletStatus} where user_id = ${userId}`, async (errorReferralUpdate, resultsReferralUpdate) => {
+
+        if (errorReferralUpdate) {
+
+            return next(errorReferralUpdate);
+
+        }
+
+        return res.status(200).json({ "message": 'Wallet Status Updated successfully!', result: resultsReferralUpdate });
+
     })
 
 }

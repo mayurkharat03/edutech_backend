@@ -140,9 +140,12 @@ exports.addStudent = async function (req, res, next) {
 }
 
 
-exports.getPackageByUserId = function (req, res, next) {
+exports.getPackageByUserId = async function (req, res, next) {
 
     const userId = req.params.userId;
+
+    let queryResults;
+    let studentDetails;
 
     db.query(`SELECT * from package_purchase where user_id = ${userId}`, async (error, results, fields) => {
 
@@ -153,12 +156,49 @@ exports.getPackageByUserId = function (req, res, next) {
         }
 
         if (results.length > 0) {
+            queryResults = results;
 
-            return res.status(200).json({ "message": 'Purchase Package by User', "result": results });
+            const promises = results.map((item, index) => {
+
+                db.query(`SELECT * from standards where id_standards = ${item.standard_id}`, async (errorStd, resultsStd, fieldsStd) => {
+
+                    if (errorStd) {
+
+                        return next(errorStd);
+
+                    }
+
+                    db.query(`SELECT * from student_details where package_id = ${item.id_package_purchase}`, (errorStdu, resultsStdu, fieldsStdu) => {
+
+                        if (errorStdu) {
+
+                            return next(errorStdu);
+
+                        }
+
+                        if (resultsStdu.length > 0) {
+                            queryResults[index].studentDetails = resultsStdu[0];
+                        } else {
+                            queryResults[index].studentDetails = {};
+                        }
+
+                        queryResults[index].subjectDetails = resultsStd[0];
+
+                        if ((results.length - 1) == index) {
+
+                            return res.status(200).json({ "message": 'Purchase Package by User', "result": queryResults });
+
+                        }
+
+                    })
+
+                })
+
+            })
 
         } else {
 
-            return res.status(200).json({ "message": 'Purchase Package by User', "result": results });
+            return res.status(200).json({ "message": 'Purchase Package by User', "result": queryResults });
 
         }
 
